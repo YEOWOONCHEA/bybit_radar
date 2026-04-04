@@ -26,6 +26,7 @@
         <!-- 상승 Top 10 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-green-900/10">
             <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 10)</h2>
+            <div id="market-leaders-list" class="space-y-2 mb-4 border-b border-gray-800 pb-4"></div>
             <div id="top-gainers-list" class="space-y-2">
                 <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
             </div>
@@ -221,12 +222,16 @@
                 
                 list.forEach(t => { t.velocity1m = updateVelocity(t.symbol, t.lastPrice); });
                 
+                const leaders = list.filter(t => t.symbol === 'BTCUSDT' || t.symbol === 'ETHUSDT');
+                leaders.sort((a,b) => a.symbol === 'BTCUSDT' ? -1 : 1);
+                
                 // 등락률 내림차순 정렬
                 list.sort((a,b) => parseFloat(b.price24hPcnt) - parseFloat(a.price24hPcnt));
                 
                 const top10 = list.slice(0, 10);
                 const bottom10 = list.slice(-10).reverse();
 
+                renderLeaders(leaders);
                 renderList(top10, 'top-gainers-list', 'gainer');
                 renderList(bottom10, 'top-losers-list', 'loser');
                 
@@ -237,6 +242,45 @@
             } catch (error) { console.error("Bybit Fetch Error:", error); }
         }
         
+        function renderLeaders(leaders) {
+            const listHTML = leaders.map(t => {
+                const sym = t.symbol.replace('USDT', '');
+                const changeRate = (parseFloat(t.price24hPcnt) * 100).toFixed(2);
+                const turnoverMillions = Math.floor(parseFloat(t.turnover24h) / 1000000).toLocaleString();
+                const fundingRate = parseFloat(t.fundingRate);
+                const fundingRateStr = (fundingRate * 100).toFixed(4);
+                
+                const frColor = fundingRate < 0 ? 'text-red-400 font-bold' : 'text-gray-500';
+                const vel = t.velocity1m;
+                const velSign = vel > 0 ? '+' : '';
+                const velColor = vel >= 0.2 ? 'text-green-400 font-bold' : (vel <= -0.2 ? 'text-red-400 font-bold' : 'text-gray-500');
+                
+                const isPositive = changeRate >= 0;
+                const colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+                const sign = isPositive ? '+' : '';
+                
+                return `
+                    <div class="flex flex-col bg-yellow-900/10 p-2.5 rounded-lg border border-yellow-500/30">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-yellow-500 text-xs w-4"><i class="fas fa-crown"></i></span>
+                                <div class="font-bold text-yellow-500 text-[15px] tracking-wide">${sym} <span class="text-[10px] text-gray-500 font-normal">Market Leader</span></div>
+                            </div>
+                            <div class="text-[15px] font-black ${colorClass} tracking-tighter">${sign}${changeRate}%</div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] font-mono pl-6 mt-0.5 tracking-tight">
+                            <div class="text-gray-400">$${turnoverMillions}M</div>
+                            <div class="flex gap-3">
+                                <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
+                                <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('market-leaders-list').innerHTML = listHTML;
+        }
+
         function renderList(dataArr, elementId, mode) {
             const listHTML = dataArr.map((t, index) => {
                 const sym = t.symbol.replace('USDT', '');
