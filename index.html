@@ -19,22 +19,27 @@
 </head>
 <body class="p-4 lg:p-8">
     <h1 class="text-3xl font-extrabold text-[#f59e0b] mb-2"><i class="fas fa-satellite-dish"></i> 1004MAS BYBIT RADAR <span class="text-xs text-gray-500 font-normal ml-2 tracking-widest border border-gray-700 px-2 rounded">v2.0 TACTICAL</span></h1>
-    <p class="text-gray-400 mb-6">글로벌 가상자산 선물 달러 자금 풀 감시망 및 자동 경보 시스템</p>
+    <p class="text-gray-400 mb-6 flex justify-between items-center flex-wrap gap-2">
+        <span>글로벌 가상자산 선물 달러 자금 풀 감시망 및 자동 경보 시스템</span>
+        <span class="text-red-400 font-mono text-sm bg-red-900/20 px-3 py-1 rounded border border-red-500/30 shadow-lg shadow-red-900/20" title="01:00, 09:00, 17:00 정각에 펀딩비가 결제되며 세력의 큰 변동성이 생깁니다.">
+            <i class="fas fa-bomb mr-1 animate-ping text-xs"></i> 펀딩비 폭발(정산) 카운트다운: <strong id="fr-countdown" class="tracking-widest">--:--:--</strong>
+        </span>
+    </p>
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         <!-- 상승 Top 10 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-green-900/10">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 10)</h2>
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 12)</h2>
             <div id="market-leaders-list" class="space-y-2 mb-4 border-b border-gray-800 pb-4"></div>
             <div id="top-gainers-list" class="space-y-2">
                 <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
             </div>
         </div>
 
-        <!-- 하락 Top 10 레이더 -->
+        <!-- 설거지 숏 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-red-900/10">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 자금 이탈 (Bottom 10)</h2>
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 설거지 폭포수 (Drawdown 12)</h2>
             <div id="top-losers-list" class="space-y-2">
                 <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
             </div>
@@ -220,23 +225,31 @@
                 
                 let list = data.result.list.filter(t => t.symbol.endsWith('USDT'));
                 
-                list.forEach(t => { t.velocity1m = updateVelocity(t.symbol, t.lastPrice); });
+                list.forEach(t => { 
+                    t.velocity1m = updateVelocity(t.symbol, t.lastPrice); 
+                    // 고점 대비 하락률(Drawdown) 분석 (설거지 포착용)
+                    const high = parseFloat(t.highPrice24h);
+                    const last = parseFloat(t.lastPrice);
+                    t.drawdown = high > 0 ? ((last - high) / high) * 100 : 0;
+                });
                 
                 const leaders = list.filter(t => t.symbol === 'BTCUSDT' || t.symbol === 'ETHUSDT');
                 leaders.sort((a,b) => a.symbol === 'BTCUSDT' ? -1 : 1);
                 
-                // 등락률 내림차순 정렬
-                list.sort((a,b) => parseFloat(b.price24hPcnt) - parseFloat(a.price24hPcnt));
+                // 롱 타겟: 24시간 등락률 플러스 순 유지
+                const gainersList = [...list].sort((a,b) => parseFloat(b.price24hPcnt) - parseFloat(a.price24hPcnt));
+                const top12 = gainersList.slice(0, 12);
                 
-                const top10 = list.slice(0, 10);
-                const bottom10 = list.slice(-10).reverse();
+                // 숏 타겟: 고점 대비 하락률(Drawdown)이 가장 심한 순서대로 세팅 (세력의 펌프앤덤프 저격용)
+                const losersList = [...list].sort((a,b) => a.drawdown - b.drawdown);
+                const drawdown12 = losersList.slice(0, 12);
 
                 renderLeaders(leaders);
-                renderList(top10, 'top-gainers-list', 'gainer');
-                renderList(bottom10, 'top-losers-list', 'loser');
+                renderList(top12, 'top-gainers-list', 'gainer');
+                renderList(drawdown12, 'top-losers-list', 'loser');
                 
-                checkAlerts(top10, bottom10);
-                calculateAIVerdict(top10, bottom10);
+                checkAlerts(top12, drawdown12);
+                calculateAIVerdict(top12, drawdown12);
                 
                 isFirstLoad = false;
             } catch (error) { console.error("Bybit Fetch Error:", error); }
@@ -299,6 +312,9 @@
                 const sign = changeRate > 0 ? '+' : '';
                 const bgClass = mode === 'gainer' ? 'gainer-bg' : 'loser-bg';
                 
+                // 설거지 레이더(loser)를 위한 Drawdown 수치 표기 생성
+                const drawdownStr = (mode === 'loser' && t.drawdown < 0) ? `<span class="bg-red-950/80 text-red-300 text-[11px] px-1.5 py-0.5 rounded border border-red-500/50 shadow shadow-red-900/50 flex items-center whitespace-nowrap ml-2"><i class="fas fa-meteor mr-1 text-[10px]"></i> Peak ${t.drawdown.toFixed(1)}%</span>` : '';
+                
                 // 신규 진입 깜빡임 처리 (60초 유지)
                 let blinkClass = '';
                 if(newEntryTracker[t.symbol]) {
@@ -314,7 +330,7 @@
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
                                 <span class="text-gray-500 font-mono text-sm w-4">${index + 1}</span>
-                                <div class="font-bold text-white text-base tracking-wide">${sym}</div>
+                                <div class="font-bold text-white text-base tracking-wide flex items-center">${sym} ${drawdownStr}</div>
                             </div>
                             <div class="text-lg font-black ${colorClass} tracking-tighter">${sign}${changeRate}%</div>
                         </div>
@@ -333,7 +349,7 @@
 
         function buildAlertMessage(mode, items) {
             if (items.length === 0) return "";
-            const title = mode === 'long' ? "🚀 <b>[롱 타점 포착] 상승 Top 10 진입</b>" : "🩸 <b>[숏 타점 포착] 하락 Top 10 진입</b>";
+            const title = mode === 'long' ? "🚀 <b>[롱 타점 포착] 상승 Top 12 진입</b>" : "🩸 <b>[숏 타점 포착] 설거지 폭포수 진입</b>";
             let msg = title + "\n\n";
             items.forEach(t => {
                 const sym = t.symbol.replace('USDT', '');
@@ -373,11 +389,11 @@
             previousLosers = currentLosers;
         }
 
-        function calculateAIVerdict(top10, bottom10) {
+        function calculateAIVerdict(top12, drawdown12) {
             const verdicts = [];
 
-            // 롱 타겟 분석 (상승 Top 10)
-            top10.forEach(t => {
+            // 롱 타겟 분석 (상승 Top 12)
+            top12.forEach(t => {
                 const sym = t.symbol.replace('USDT', '');
                 const turnover = parseFloat(t.turnover24h) / 1000000;
                 const vel = t.velocity1m;
@@ -399,25 +415,27 @@
                 }
             });
 
-            // 숏 타겟 분석 (하락 Bottom 10)
-            bottom10.forEach(t => {
+            // 숏 타겟 분석 (고점 대비 폭락 Drawdown 12)
+            drawdown12.forEach(t => {
                 const sym = t.symbol.replace('USDT', '');
                 const turnover = parseFloat(t.turnover24h) / 1000000;
                 const vel = t.velocity1m;
                 const fr = parseFloat(t.fundingRate) * 100;
+                const dd = t.drawdown;
                 
-                if (turnover > 30 && vel < -0.3 && fr > 0.01) {
+                // 기존 조건에 '고점에서 15% 이상 피를 흘린 종목' 조건 추가
+                if (turnover > 30 && vel < -0.3 && fr > 0.01 && dd < -15) {
                     // 황금 타점 최초 발견 시 (60초 이내 중복 알람/텔레그램 방지)
                     if (!newVerdictTracker[sym] || Date.now() - newVerdictTracker[sym] > 60000) {
                         playSound('golden_short');
-                        sendTelegramMessage(`🎯 <b>[제갈량 황금 타점 발견: 숏(SHORT)]</b>\n\n- <b>${sym}</b>\n🩸 돈(거래대금 $${Math.floor(turnover)}M) 이탈 중!\n📉 하락 가속도(${vel.toFixed(2)}%) 급증!\n❗️ 펀딩비(${fr.toFixed(4)}%) 위험 수준!\n\n<i>롱 포지션 연쇄 청산 폭포수가 발생할 수 있는 황금 타점입니다. 진입을 고려하십시오.</i>`);
+                        sendTelegramMessage(`🎯 <b>[제갈량 황금 타점 발견: 숏(SHORT) 설거지 포착!]</b>\n\n- <b>${sym}</b>\n💀 고점 대비 폭락(${dd.toFixed(2)}%) 발생!\n🩸 돈(거래대금 $${Math.floor(turnover)}M) 이탈 중!\n📉 하락 가속도(${vel.toFixed(2)}%) 급증!\n❗️ 펀딩비(${fr.toFixed(4)}%) 위험 수준!\n\n<i>세력의 펌프앤덤프 물량이 쏟아지며 롱 포지션 연쇄 청산 폭포수가 터지는 완벽한 숏 타점입니다. 진입하십시오.</i>`);
                         newVerdictTracker[sym] = Date.now();
                     }
 
                     verdicts.push({
                         coin_name: sym,
                         signal: 'red',
-                        reason: `🩸 <b>돈(거래대금 $${Math.floor(turnover)}M)</b>이 빠져나가며 <b>가속도(${vel.toFixed(2)}%)</b>가 곤두박질치고 있습니다.\n그럼에도 <b>펀딩비가 플러스(${fr.toFixed(4)}%)</b>이므로 아직도 반등(Long)을 기대하는 자들이 많습니다. 이들의 연쇄 청산 폭포수가 우려되는 보증된 숏(Short) 타점입니다.`
+                        reason: `💀 <b>고점 대비 폭락(${dd.toFixed(2)}%)</b>하는 전형적인 <b>'설거지(Pump & Dump)'</b> 패턴입니다.\n여기에 돈(거래대금 $${Math.floor(turnover)}M)이 빠져나가며 가속도(${vel.toFixed(2)}%)가 심하게 고꾸라지고 있습니다.\n그럼에도 펀딩비가 플러스(${fr.toFixed(4)}%)이므로 미련을 못 버린 롱(개미) 포지션의 연쇄 청산 폭포수가 터지는 보증된 투매(Short) 타점입니다.`
                     });
                 }
             });
@@ -427,7 +445,7 @@
                 verdicts.push({
                     coin_name: '제갈량의 3대 황금 비율 대기 중...',
                     signal: 'yellow',
-                    reason: '현재 시장에 (1)거래대금 폭발 (2)미친 가속도 (3)펀딩비 함정 조건이 모두 맞아떨어지는 완벽한 사냥감이 없습니다.\n무리한 추격 매매를 피하고 10위권 순위 변동을 유유자적하게 관망하시옵소서.'
+                    reason: '현재 시장에 (1)거래대금 폭발 (2)미친 가속도 (3)펀딩비 결정적 함정이 모두 맞아떨어지는 완벽한 사냥감이 없습니다.\n무리한 추격 매매를 피하고 12위권 순위 변동을 유유자적하게 관망하시옵소서.'
                 });
             }
 
@@ -476,6 +494,46 @@
             fetchBybitData();
             setInterval(fetchBybitData, 2000);
         }
+
+        function updateFundingCountdown() {
+            const now = new Date();
+            const utcH = now.getUTCHours();
+            const utcM = now.getUTCMinutes();
+            const utcS = now.getUTCSeconds();
+            
+            // 바이비트 공식 펀딩비 정산: 한국시간 1시, 9시, 17시 (UTC기준 0, 8, 16시)
+            let nextUtcH = 0;
+            if (utcH < 8) nextUtcH = 8;
+            else if (utcH < 16) nextUtcH = 16;
+            else nextUtcH = 24;
+
+            const currentSeconds = utcH * 3600 + utcM * 60 + utcS;
+            const targetSeconds = nextUtcH * 3600;
+            let diff = targetSeconds - currentSeconds;
+            
+            const h = Math.floor(diff / 3600);
+            diff %= 3600;
+            const m = Math.floor(diff / 60);
+            const s = diff % 60;
+            
+            const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            const counterElement = document.getElementById('fr-countdown');
+            if (counterElement) {
+                counterElement.innerText = timeStr;
+                // 남은 시간이 10분 내외일 경우 긴급 효과 (옵션)
+                if (diff < 600) {
+                    counterElement.parentElement.classList.replace('text-red-400', 'text-white');
+                    counterElement.parentElement.classList.replace('bg-red-900/20', 'bg-red-600');
+                    counterElement.parentElement.classList.add('animate-pulse');
+                } else {
+                    counterElement.parentElement.classList.replace('text-white', 'text-red-400');
+                    counterElement.parentElement.classList.replace('bg-red-600', 'bg-red-900/20');
+                    counterElement.parentElement.classList.remove('animate-pulse');
+                }
+            }
+        }
+        setInterval(updateFundingCountdown, 1000);
+        updateFundingCountdown();
 
         initBybitEngine();
     </script>
