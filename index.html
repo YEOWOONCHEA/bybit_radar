@@ -323,7 +323,7 @@
                 const bgClass = mode === 'gainer' ? 'gainer-bg' : 'loser-bg';
                 
                 // 설거지 레이더(loser)를 위한 Drawdown 수치 표기 생성 (하단 배치용)
-                const drawdownStr = (mode === 'loser' && t.drawdown < 0) ? `<span title="고점 대비 폭락률(설거지)"><i class="fas fa-meteor text-red-500 mr-1 text-[10px]"></i>Peak: <span class="text-red-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>` : '';
+                const drawdownStr = (mode === 'loser' && t.drawdown < 0) ? `<span title="고점 대비 폭락률(설거지)"><i class="fas fa-meteor text-red-500 mr-1 text-sm"></i>Peak: <span class="text-red-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>` : '';
                 
                 // 신규 진입 깜빡임 처리 (60초 유지)
                 let blinkClass = '';
@@ -339,14 +339,14 @@
                     <div class="flex flex-col ${bgClass} ${blinkClass} bg-black/40 p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-300">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
-                                <span class="text-gray-500 font-mono text-sm w-4">${index + 1}</span>
-                                <div class="font-bold text-white text-base tracking-wide flex items-center">${sym}</div>
+                                <span class="text-gray-500 font-mono text-base w-4">${index + 1}</span>
+                                <div class="font-bold text-white text-lg tracking-wide flex items-center">${sym}</div>
                             </div>
-                            <div class="text-lg font-black ${colorClass} tracking-tighter">${sign}${changeRate}%</div>
+                            <div class="text-xl font-black ${colorClass} tracking-tighter">${sign}${changeRate}%</div>
                         </div>
-                        <div class="flex justify-between items-center text-xs font-mono pl-6 mt-1 tracking-tight">
+                        <div class="flex justify-between items-center text-base font-bold font-mono pl-6 mt-1.5 tracking-tight">
                             <div class="text-gray-300">$${turnoverMillions}M</div>
-                            <div class="flex gap-3 items-center">
+                            <div class="flex gap-4 items-center">
                                 ${drawdownStr}
                                 <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
                                 <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
