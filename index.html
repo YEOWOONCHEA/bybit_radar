@@ -9,141 +9,326 @@
     <style>
         body { background-color: #0b0f19; color: #cbd5e1; font-family: 'Inter', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid #1e293b; }
+        .gainer-bg { background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%); }
+        .loser-bg { background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%); }
     </style>
 </head>
-<body class="p-8">
-    <h1 class="text-3xl font-extrabold text-[#f59e0b] mb-2"><i class="fas fa-chart-line"></i> 1004MAS BYBIT RADAR</h1>
-    <p class="text-gray-400 mb-8">글로벌 가상자산 선물(Futures) 달러 자금 풀 실시간 감시망</p>
+<body class="p-4 lg:p-8">
+    <h1 class="text-3xl font-extrabold text-[#f59e0b] mb-2"><i class="fas fa-satellite-dish"></i> 1004MAS BYBIT RADAR <span class="text-xs text-gray-500 font-normal ml-2 tracking-widest border border-gray-700 px-2 rounded">v2.0 TACTICAL</span></h1>
+    <p class="text-gray-400 mb-6">글로벌 가상자산 선물 달러 자금 풀 감시망 및 자동 경보 시스템</p>
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- 실시간 Top 5 레이더 -->
-        <div class="lg:col-span-5 glass p-6 rounded-xl">
-            <h2 class="text-xl font-bold text-white mb-4"><i class="fas fa-globe-americas text-[#f59e0b] animate-pulse mr-2"></i> 글로벌 자금 쏠림 (Top 5)</h2>
-            <div id="top-gainers-list" class="space-y-3">
-                <div class="text-gray-400 text-sm">바이비트 통신망과 연결 중...</div>
+        
+        <!-- 상승 Top 10 레이더 -->
+        <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-green-900/10">
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 10)</h2>
+            <div id="top-gainers-list" class="space-y-2">
+                <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
+            </div>
+        </div>
+
+        <!-- 하락 Top 10 레이더 -->
+        <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-red-900/10">
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 자금 이탈 (Bottom 10)</h2>
+            <div id="top-losers-list" class="space-y-2">
+                <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
             </div>
         </div>
         
         <!-- 제갈량 판결 리스트 -->
-        <div class="lg:col-span-7 glass p-6 rounded-xl relative">
-            <h2 class="text-xl font-bold text-white mb-4 flex justify-between items-center">
-                <div><i class="fas fa-brain text-purple-400 mr-2"></i> 제갈량 전술 통제합동소 (Bybit)</div>
-                <div class="flex items-center text-xs text-green-400"><div class="w-2 h-2 bg-green-400 rounded-full animate-ping mr-2"></div> AI 위성 수신 중</div>
+        <div class="lg:col-span-4 glass p-4 rounded-xl relative">
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2 flex justify-between items-center">
+                <div><i class="fas fa-brain text-purple-400 mr-2"></i> 제갈량 통제합동소</div>
+                <div class="flex items-center text-xs text-green-400"><div class="w-2 h-2 bg-green-400 rounded-full animate-ping mr-2"></div> AI 수신</div>
             </h2>
-            <div id="ai-verdict-list" class="space-y-4">
-                <div class="text-gray-400 text-sm">로컬 파이썬 봇의 시그널을 대기 중입니다...</div>
+            <div id="ai-verdict-list" class="space-y-3">
+                <div class="text-gray-400 text-sm"><i class="fas fa-satellite mr-2"></i>오더플로우 분석 대기...</div>
+            </div>
+            
+            <div class="mt-6 border-t border-gray-800 pt-4 text-[11px] text-gray-500 font-mono">
+                <div class="mb-1"><i class="fas fa-volume-up text-gray-400 mr-1 w-3"></i> 알람: <span id="audio-status" class="text-red-400">비활성화 (권한 필요)</span></div>
+                <div class="mb-1"><i class="fas fa-bolt text-gray-400 mr-1 w-3"></i> Vel : 최근 1분 가격 가속도 (단기 포착용)</div>
+                <div><i class="fas fa-percentage text-gray-400 mr-1 w-3"></i> FR  : 현재 펀딩비 (-는 숏스퀴즈 주의)</div>
+            </div>
+            
+            <!-- 텔레그램 연동 셋팅 -->
+            <div class="mt-4 p-3 bg-black/30 border border-gray-800 rounded-lg">
+                <div class="text-[11px] text-gray-300 mb-2 font-bold"><i class="fab fa-telegram text-blue-400"></i> Telegram 봇 연동 (로컬 저장소 캐싱)</div>
+                <div class="space-y-2">
+                    <input type="password" id="tg_bot_token" placeholder="Bot Token (ex: 1234:ABC...)" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-[10px] text-white focus:outline-none focus:border-blue-500">
+                    <input type="text" id="tg_chat_id" placeholder="Chat ID (ex: 1234567890)" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-[10px] text-white focus:outline-none focus:border-blue-500">
+                    <button onclick="saveTelegramSettings()" class="w-full bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 rounded p-1.5 text-[10px] transition-colors"><i class="fas fa-save mr-1"></i> 설정 저장 및 테스트 발송</button>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button onclick="enableAudio()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs text-white border border-gray-600 transition-colors w-full"><i class="fas fa-play mr-1"></i> 알람 시스템 가동 (사운드 권한 승인)</button>
             </div>
         </div>
     </div>
     
-    <div class="mt-8 text-center text-sm">
-        <a href="https://www.1004mas.com" class="text-yellow-500 hover:text-white underline"><i class="fas fa-door-open mr-1"></i> 중앙 포탈로 복귀</a>
+    <div class="mt-8 text-center text-sm pb-8">
+        <a href="https://www.1004mas.com" class="text-yellow-500 hover:text-white transition-colors underline"><i class="fas fa-door-open mr-1"></i> 중앙 포탈로 복귀</a>
     </div>
     
-    <!-- 1004MAS Bybit Real-time Engine -->
     <script>
-        async function initBybitEngine() {
-            fetchTopGainers();
-            setInterval(fetchTopGainers, 2000); // 2초마다 갱신
-            
-            fetchAIVerdict();
-            setInterval(fetchAIVerdict, 60000); // 1분마다 AI 데이터 갱신
+        let previousGainers = new Set();
+        let previousLosers = new Set();
+        let isFirstLoad = true;
+        let audioEnabled = false;
+        
+        // 메모리 기반 1분 가속도 트래커 { 'BTCUSDT': [{time, price}, ...] }
+        const priceHistory = {};
+        
+        // --- 텔레그램 연동 ---
+        function loadTelegramSettings() {
+            const token = localStorage.getItem('tg_bot_token');
+            const chatId = localStorage.getItem('tg_chat_id');
+            if(token) document.getElementById('tg_bot_token').value = token;
+            if(chatId) document.getElementById('tg_chat_id').value = chatId;
         }
 
-        async function fetchTopGainers() {
+        function saveTelegramSettings() {
+            const token = document.getElementById('tg_bot_token').value.trim();
+            const chatId = document.getElementById('tg_chat_id').value.trim();
+            localStorage.setItem('tg_bot_token', token);
+            localStorage.setItem('tg_chat_id', chatId);
+            if(token && chatId) {
+                sendTelegramMessage("✅ <b>[1004MAS Bybit Radar]</b>\n\n주공, 텔레그램 전령 시스템 연동이 정상적으로 완료되었습니다. 앞으로 급등락 종목을 이곳으로 보고하겠습니다.");
+                alert("텔레그램 설정이 기기(로컬)에 안전하게 저장되었습니다.\n테스트 메시지를 확인해주세요!");
+            } else {
+                alert("토큰과 Chat ID를 모두 입력해주세요.");
+            }
+        }
+
+        async function sendTelegramMessage(text) {
+            const token = localStorage.getItem('tg_bot_token');
+            const chatId = localStorage.getItem('tg_chat_id');
+            if(!token || !chatId) return;
             try {
-                // Bybit V5 API: 선물(Linear) 실시간 마켓 전체 조회
+                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })
+                });
+            } catch(e) { console.error("Telegram API Error", e); }
+        }
+        // ------------------
+        
+        function enableAudio() {
+            audioEnabled = true;
+            document.getElementById('audio-status').innerText = '활성화됨 (대기중)';
+            document.getElementById('audio-status').className = 'text-green-400 font-bold';
+            playSound('test');
+        }
+
+        function playSound(type) {
+            if(!audioEnabled) return;
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if(!Ctx) return;
+                const ctx = new Ctx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                if(type === 'long') {
+                    // 경쾌한 상승 알람 (따랑~)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(); osc.stop(ctx.currentTime + 0.3);
+                } else if(type === 'short') {
+                    // 묵직한 하락 알람 (부웅-)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(200, ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                    osc.start(); osc.stop(ctx.currentTime + 0.4);
+                } else if(type === 'test') {
+                    // 권한 승인음
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.start(); osc.stop(ctx.currentTime + 0.1);
+                }
+            } catch(e) { console.log("Audio Error", e); }
+        }
+
+        function updateVelocity(symbol, currentPrice) {
+            const now = Date.now();
+            if(!priceHistory[symbol]) priceHistory[symbol] = [];
+            
+            priceHistory[symbol].push({ time: now, price: parseFloat(currentPrice) });
+            priceHistory[symbol] = priceHistory[symbol].filter(p => now - p.time <= 60000);
+            
+            if(priceHistory[symbol].length > 1) {
+                const oldest = priceHistory[symbol][0];
+                const velocityPct = ((currentPrice - oldest.price) / oldest.price) * 100;
+                return velocityPct;
+            }
+            return 0;
+        }
+
+        async function fetchBybitData() {
+            try {
                 const res = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
                 const data = await res.json();
                 
-                // USDT 페어만 필터링
                 let list = data.result.list.filter(t => t.symbol.endsWith('USDT'));
                 
-                // 등락률(price24hPcnt) 내림차순 정렬
+                list.forEach(t => { t.velocity1m = updateVelocity(t.symbol, t.lastPrice); });
+                
+                // 등락률 내림차순 정렬
                 list.sort((a,b) => parseFloat(b.price24hPcnt) - parseFloat(a.price24hPcnt));
-                const top5 = list.slice(0, 5);
                 
-                const listHTML = top5.map((t, index) => {
-                    const sym = t.symbol;
-                    const changeRate = (parseFloat(t.price24hPcnt) * 100).toFixed(2);
-                    const turnoverMillions = Math.floor(parseFloat(t.turnover24h) / 1000000).toLocaleString();
-                    
-                    // 글로벌 표준 색상: 상승=초록, 하락=빨강
-                    const colorClass = changeRate > 0 ? 'text-green-500' : 'text-red-500';
-                    const sign = changeRate > 0 ? '+' : '';
-                    
-                    return `
-                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors">
-                            <div class="flex items-center gap-3">
-                                <span class="text-gray-600 font-black text-lg w-4">${index + 1}</span>
-                                <div>
-                                    <div class="font-bold text-white">${sym} <span class="text-xs text-gray-500 ml-1 font-normal">PERP</span></div>
-                                    <div class="text-xs text-gray-400 mt-0.5">거래대금 $${turnoverMillions}M</div>
-                                </div>
-                            </div>
-                            <div class="text-xl font-black ${colorClass}">${sign}${changeRate}%</div>
-                        </div>
-                    `;
-                }).join('');
+                const top10 = list.slice(0, 10);
+                const bottom10 = list.slice(-10).reverse();
+
+                renderList(top10, 'top-gainers-list', 'gainer');
+                renderList(bottom10, 'top-losers-list', 'loser');
                 
-                document.getElementById('top-gainers-list').innerHTML = listHTML;
-            } catch (error) {
-                console.error("Bybit Fetch Error:", error);
-            }
+                checkAlerts(top10, bottom10);
+                
+                isFirstLoad = false;
+            } catch (error) { console.error("Bybit Fetch Error:", error); }
         }
         
-        let aiVerdictsCache = [];
+        function renderList(dataArr, elementId, mode) {
+            const listHTML = dataArr.map((t, index) => {
+                const sym = t.symbol.replace('USDT', '');
+                const changeRate = (parseFloat(t.price24hPcnt) * 100).toFixed(2);
+                const turnoverMillions = Math.floor(parseFloat(t.turnover24h) / 1000000).toLocaleString();
+                const fundingRate = parseFloat(t.fundingRate);
+                const fundingRateStr = (fundingRate * 100).toFixed(4);
+                
+                const frColor = fundingRate < 0 ? 'text-red-400 font-bold' : 'text-gray-500';
+                
+                const vel = t.velocity1m;
+                const velSign = vel > 0 ? '+' : '';
+                const velColor = vel >= 0.2 ? 'text-green-400 font-bold' : (vel <= -0.2 ? 'text-red-400 font-bold' : 'text-gray-500');
+                
+                const colorClass = mode === 'gainer' ? 'text-green-400' : 'text-red-400';
+                const sign = changeRate > 0 ? '+' : '';
+                const bgClass = mode === 'gainer' ? 'gainer-bg' : 'loser-bg';
+                
+                return `
+                    <div class="flex flex-col ${bgClass} bg-black/40 p-2.5 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-600 font-mono text-xs w-4">${index + 1}</span>
+                                <div class="font-bold text-white text-[15px] tracking-wide">${sym}</div>
+                            </div>
+                            <div class="text-lg font-black ${colorClass} tracking-tighter">${sign}${changeRate}%</div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px] font-mono pl-6">
+                            <div class="text-gray-400">$${turnoverMillions}M</div>
+                            <div class="flex gap-2.5">
+                                <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
+                                <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById(elementId).innerHTML = listHTML;
+        }
 
+        function buildAlertMessage(mode, items) {
+            if (items.length === 0) return "";
+            const title = mode === 'long' ? "🚀 <b>[롱 타점 포착] 상승 Top 10 진입</b>" : "🩸 <b>[숏 타점 포착] 하락 Top 10 진입</b>";
+            let msg = title + "\n\n";
+            items.forEach(t => {
+                const sym = t.symbol.replace('USDT', '');
+                const chg = (parseFloat(t.price24hPcnt) * 100).toFixed(2);
+                const vel = t.velocity1m.toFixed(2);
+                msg += `- <b>${sym}</b> : ${chg}% (1분 가속도: ${vel}%)\n`;
+            });
+            return msg;
+        }
+
+        function checkAlerts(top10, bottom10) {
+            if(isFirstLoad) {
+                top10.forEach(t => previousGainers.add(t.symbol));
+                bottom10.forEach(t => previousLosers.add(t.symbol));
+                return;
+            }
+            
+            const currentGainers = new Set(top10.map(t => t.symbol));
+            const currentLosers = new Set(bottom10.map(t => t.symbol));
+            
+            const newlyAddedGainers = top10.filter(t => !previousGainers.has(t.symbol));
+            const newlyAddedLosers = bottom10.filter(t => !previousLosers.has(t.symbol));
+            
+            if(newlyAddedGainers.length > 0) {
+                playSound('long');
+                sendTelegramMessage(buildAlertMessage('long', newlyAddedGainers));
+            }
+            
+            if(newlyAddedLosers.length > 0) {
+                playSound('short');
+                sendTelegramMessage(buildAlertMessage('short', newlyAddedLosers));
+            }
+            
+            previousGainers = currentGainers;
+            previousLosers = currentLosers;
+        }
+
+        let aiVerdictsCache = [];
         async function fetchAIVerdict() {
             try {
-                // Bybit 전용 JSONBin ID
                 const res = await fetch('https://api.jsonbin.io/v3/b/69d0701e856a682189f9f1f3?meta=false');
                 const data = await res.json();
-                
                 if(Array.isArray(data)) {
                     aiVerdictsCache = data;
                     renderVerdicts();
                 }
-            } catch(e) {
-                console.error("Verdict Fetch Error:", e);
-            }
+            } catch(e) {}
         }
 
         function renderVerdicts() {
             if(aiVerdictsCache.length === 0) return;
-            
             const styles = {
                 'red': 'border-red-500/40 bg-red-900/10',
                 'green': 'border-green-500/40 bg-green-900/10',
                 'yellow': 'border-yellow-500/40 bg-yellow-900/10'
             };
-            
             const badges = {
-                'red': '<span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-red-500/30"><i class="fas fa-skull-crossbones mr-1"></i> 숏(Short) 타겟 / 관망</span>',
-                'green': '<span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-green-500/30"><i class="fas fa-bullseye mr-1"></i> 롱(Long) 타겟 승인</span>',
-                'yellow': '<span class="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg shadow-yellow-500/30"><i class="fas fa-bomb mr-1"></i> 청산 맵 주의구간</span>'
+                'red': '<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-red-500/30">숏 타겟</span>',
+                'green': '<span class="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-green-500/30">롱 타겟</span>',
+                'yellow': '<span class="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-yellow-500/30">주의 구간</span>'
             };
             
             const html = aiVerdictsCache.map(v => {
                 const style = styles[v.signal] || styles['yellow'];
                 const badge = badges[v.signal] || badges['yellow'];
-                
                 return `
-                    <div class="p-4 rounded-xl border ${style} backdrop-blur-sm relative overflow-hidden transition-all hover:scale-[1.01]">
-                        <div class="flex justify-between items-start mb-3">
-                            <h3 class="font-extrabold text-white text-lg">${v.coin_name}</h3>
+                    <div class="p-3 rounded-lg border ${style} backdrop-blur-sm transition-all hover:scale-[1.02]">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <h3 class="font-extrabold text-white text-sm">${v.coin_name}</h3>
                             ${badge}
                         </div>
-                        <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-line">${v.reason}</p>
-                        <div class="text-right text-xs mt-3 text-gray-500"><i class="far fa-clock"></i> ${v.timestamp} (오더플로우 분석결과)</div>
+                        <p class="text-xs text-gray-300 leading-relaxed whitespace-pre-line">${v.reason}</p>
                     </div>
                 `;
             }).join('');
-            
             document.getElementById('ai-verdict-list').innerHTML = html;
         }
         
-        // Start Engine
+        async function initBybitEngine() {
+            loadTelegramSettings();
+            fetchBybitData();
+            setInterval(fetchBybitData, 2000);
+            fetchAIVerdict();
+            setInterval(fetchAIVerdict, 60000);
+        }
+
         initBybitEngine();
     </script>
 </body>
