@@ -296,7 +296,10 @@
                             <div class="flex gap-4">
                                 ${t.drawdown >= -3 
                                     ? `<span title="고점 유지력(초강세)"><i class="fas fa-fire text-blue-400 mr-1 text-sm"></i>Peak: <span class="text-blue-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>`
-                                    : `<span title="고점 이탈(윗꼬리 주의)"><i class="fas fa-exclamation-triangle text-yellow-500 mr-1 text-sm"></i>Peak: <span class="text-yellow-500 font-bold">${t.drawdown.toFixed(1)}%</span></span>`
+                                    : (t.drawdown >= -10 
+                                        ? `<span title="고점 이탈(경고)"><i class="fas fa-exclamation-triangle text-yellow-500 mr-1 text-sm"></i>Peak: <span class="text-yellow-500 font-bold">${t.drawdown.toFixed(1)}%</span></span>`
+                                        : `<span title="고점 폭락(설거지)"><i class="fas fa-meteor text-red-500 mr-1 text-sm"></i>Peak: <span class="text-red-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>`
+                                      )
                                 }
                                 <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
                                 <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
@@ -326,15 +329,15 @@
                 const sign = changeRate > 0 ? '+' : '';
                 const bgClass = mode === 'gainer' ? 'gainer-bg' : 'loser-bg';
                 
-                // 하단 Drawdown 수치 표기 생성 (주군의 롱/숏 전술 분리)
+                // 하단 Drawdown 수치 표기 생성 (파랑-노랑-빨강 통합 컬러 스케일 적용)
                 let drawdownStr = '';
-                if (mode === 'loser' && t.drawdown < 0) {
-                    drawdownStr = `<span title="고점 대비 폭락률(설거지)"><i class="fas fa-meteor text-red-500 mr-1 text-sm"></i>Peak: <span class="text-red-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>`;
-                } else if (mode === 'gainer') {
+                if (t.drawdown < 0) {
                     if (t.drawdown >= -3) {
                         drawdownStr = `<span title="고점 방어력(진성 상승장)"><i class="fas fa-fire text-blue-400 mr-1 text-sm"></i>Peak: <span class="text-blue-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>`;
-                    } else if (t.drawdown < 0) {
+                    } else if (t.drawdown >= -10) {
                         drawdownStr = `<span title="고점 이탈(윗꼬리 발생)"><i class="fas fa-exclamation-triangle text-yellow-500 mr-1 text-sm"></i>Peak: <span class="text-yellow-500 font-bold">${t.drawdown.toFixed(1)}%</span></span>`;
+                    } else {
+                        drawdownStr = `<span title="고점 폭락(설거지)"><i class="fas fa-meteor text-red-500 mr-1 text-sm"></i>Peak: <span class="text-red-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>`;
                     }
                 }
                 
