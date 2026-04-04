@@ -202,6 +202,7 @@
                 renderList(bottom10, 'top-losers-list', 'loser');
                 
                 checkAlerts(top10, bottom10);
+                calculateAIVerdict(top10, bottom10);
                 
                 isFirstLoad = false;
             } catch (error) { console.error("Bybit Fetch Error:", error); }
@@ -299,32 +300,66 @@
             previousLosers = currentLosers;
         }
 
-        let aiVerdictsCache = [];
-        async function fetchAIVerdict() {
-            try {
-                const res = await fetch('https://api.jsonbin.io/v3/b/69d0701e856a682189f9f1f3?meta=false');
-                const data = await res.json();
-                if(Array.isArray(data)) {
-                    aiVerdictsCache = data;
-                    renderVerdicts();
+        function calculateAIVerdict(top10, bottom10) {
+            const verdicts = [];
+
+            // 롱 타겟 분석 (상승 Top 10)
+            top10.forEach(t => {
+                const sym = t.symbol.replace('USDT', '');
+                const turnover = parseFloat(t.turnover24h) / 1000000;
+                const vel = t.velocity1m;
+                const fr = parseFloat(t.fundingRate) * 100;
+                
+                if (turnover > 30 && vel > 0.3 && fr < 0) {
+                    verdicts.push({
+                        coin_name: sym,
+                        signal: 'green',
+                        reason: `🔥 <b>돈(거래대금 $${Math.floor(turnover)}M)</b>이 강하게 쏠리며 <b>가속도(+${vel.toFixed(2)}%)</b>가 폭발 중입니다.\n현재 <b>펀딩비가 마이너스(${fr.toFixed(4)}%)</b> 상태로, 숏(Short) 포지션을 잡은 개미들의 연쇄 청산이 일어나는 '황금 롱(Long) 타점(숏스퀴즈)'일 확률이 매우 높습니다.`
+                    });
                 }
-            } catch(e) {}
+            });
+
+            // 숏 타겟 분석 (하락 Bottom 10)
+            bottom10.forEach(t => {
+                const sym = t.symbol.replace('USDT', '');
+                const turnover = parseFloat(t.turnover24h) / 1000000;
+                const vel = t.velocity1m;
+                const fr = parseFloat(t.fundingRate) * 100;
+                
+                if (turnover > 30 && vel < -0.3 && fr > 0.01) {
+                    verdicts.push({
+                        coin_name: sym,
+                        signal: 'red',
+                        reason: `🩸 <b>돈(거래대금 $${Math.floor(turnover)}M)</b>이 빠져나가며 <b>가속도(${vel.toFixed(2)}%)</b>가 곤두박질치고 있습니다.\n그럼에도 <b>펀딩비가 플러스(${fr.toFixed(4)}%)</b>이므로 아직도 반등(Long)을 기대하는 자들이 많습니다. 이들의 연쇄 청산 폭포수가 우려되는 보증된 숏(Short) 타점입니다.`
+                    });
+                }
+            });
+
+            // 타점이 완벽하지 않을 때
+            if (verdicts.length === 0) {
+                verdicts.push({
+                    coin_name: '제갈량의 3대 황금 비율 대기 중...',
+                    signal: 'yellow',
+                    reason: '현재 시장에 (1)거래대금 폭발 (2)미친 가속도 (3)펀딩비 함정 조건이 모두 맞아떨어지는 완벽한 사냥감이 없습니다.\n무리한 추격 매매를 피하고 10위권 순위 변동을 유유자적하게 관망하시옵소서.'
+                });
+            }
+
+            renderDynamicVerdicts(verdicts);
         }
 
-        function renderVerdicts() {
-            if(aiVerdictsCache.length === 0) return;
+        function renderDynamicVerdicts(verdicts) {
             const styles = {
                 'red': 'border-red-500/40 bg-red-900/10',
                 'green': 'border-green-500/40 bg-green-900/10',
                 'yellow': 'border-yellow-500/40 bg-yellow-900/10'
             };
             const badges = {
-                'red': '<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-red-500/30">숏 타겟</span>',
-                'green': '<span class="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-green-500/30">롱 타겟</span>',
+                'red': '<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-red-500/30 animate-pulse">숏 타겟</span>',
+                'green': '<span class="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-green-500/30 animate-pulse">롱 타겟</span>',
                 'yellow': '<span class="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg shadow-yellow-500/30">주의 구간</span>'
             };
             
-            const html = aiVerdictsCache.map(v => {
+            const html = verdicts.map(v => {
                 const style = styles[v.signal] || styles['yellow'];
                 const badge = badges[v.signal] || badges['yellow'];
                 return `
@@ -333,7 +368,7 @@
                             <h3 class="font-extrabold text-white text-sm">${v.coin_name}</h3>
                             ${badge}
                         </div>
-                        <p class="text-xs text-gray-300 leading-relaxed whitespace-pre-line">${v.reason}</p>
+                        <p class="text-[11.5px] text-gray-300 leading-relaxed whitespace-pre-line">${v.reason}</p>
                     </div>
                 `;
             }).join('');
@@ -344,8 +379,6 @@
             loadTelegramSettings();
             fetchBybitData();
             setInterval(fetchBybitData, 2000);
-            fetchAIVerdict();
-            setInterval(fetchAIVerdict, 60000);
         }
 
         initBybitEngine();
