@@ -21,16 +21,18 @@
     <h1 class="text-3xl font-extrabold text-[#f59e0b] mb-2"><i class="fas fa-satellite-dish"></i> 1004MAS BYBIT RADAR <span class="text-xs text-gray-500 font-normal ml-2 tracking-widest border border-gray-700 px-2 rounded">v2.0 TACTICAL</span></h1>
     <p class="text-gray-400 mb-6 flex justify-between items-center flex-wrap gap-2">
         <span>글로벌 가상자산 선물 달러 자금 풀 감시망 및 자동 경보 시스템</span>
-        <span class="text-red-400 font-mono text-sm bg-red-900/20 px-3 py-1 rounded border border-red-500/30 shadow-lg shadow-red-900/20" title="01:00, 09:00, 17:00 정각에 펀딩비가 결제되며 세력의 큰 변동성이 생깁니다.">
-            <i class="fas fa-bomb mr-1 animate-ping text-xs"></i> 펀딩비 폭발(정산) 카운트다운: <strong id="fr-countdown" class="tracking-widest">--:--:--</strong>
-        </span>
     </p>
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         <!-- 상승 Top 10 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-green-900/10">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 12)</h2>
+            <h2 class="text-lg flex justify-between items-center font-bold text-white mb-4 border-b border-gray-800 pb-2">
+                <span><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 12)</span>
+                <span class="text-red-400 font-mono text-xs bg-red-900/40 px-2 py-0.5 rounded border border-red-500/30" title="01:00, 09:00, 17:00 정각 펀딩비 결제 남은 시간">
+                    <i class="fas fa-bomb mr-1 animate-ping"></i> <strong class="fr-countdown-display tracking-widest">--:--:--</strong>
+                </span>
+            </h2>
             <div id="market-leaders-list" class="space-y-2 mb-4 border-b border-gray-800 pb-4"></div>
             <div id="top-gainers-list" class="space-y-2">
                 <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
@@ -39,7 +41,12 @@
 
         <!-- 설거지 숏 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-red-900/10">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 설거지 폭포수 (Drawdown 12)</h2>
+            <h2 class="text-lg flex justify-between items-center font-bold text-white mb-4 border-b border-gray-800 pb-2">
+                <span><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 설거지 폭포수 (Drawdown 12)</span>
+                <span class="text-red-400 font-mono text-xs bg-red-900/40 px-2 py-0.5 rounded border border-red-500/30" title="01:00, 09:00, 17:00 정각 펀딩비 결제 남은 시간">
+                    <i class="fas fa-bomb mr-1 animate-ping"></i> <strong class="fr-countdown-display tracking-widest">--:--:--</strong>
+                </span>
+            </h2>
             <div id="top-losers-list" class="space-y-2">
                 <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
             </div>
@@ -517,20 +524,20 @@
             const s = diff % 60;
             
             const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-            const counterElement = document.getElementById('fr-countdown');
-            if (counterElement) {
-                counterElement.innerText = timeStr;
+            const counterElements = document.querySelectorAll('.fr-countdown-display');
+            counterElements.forEach(el => {
+                el.innerText = timeStr;
                 // 남은 시간이 10분 내외일 경우 긴급 효과 (옵션)
                 if (diff < 600) {
-                    counterElement.parentElement.classList.replace('text-red-400', 'text-white');
-                    counterElement.parentElement.classList.replace('bg-red-900/20', 'bg-red-600');
-                    counterElement.parentElement.classList.add('animate-pulse');
+                    el.parentElement.classList.replace('text-red-400', 'text-white');
+                    el.parentElement.classList.replace('bg-red-900/40', 'bg-red-600');
+                    el.parentElement.classList.add('animate-pulse');
                 } else {
-                    counterElement.parentElement.classList.replace('text-white', 'text-red-400');
-                    counterElement.parentElement.classList.replace('bg-red-600', 'bg-red-900/20');
-                    counterElement.parentElement.classList.remove('animate-pulse');
+                    el.parentElement.classList.replace('text-white', 'text-red-400');
+                    el.parentElement.classList.replace('bg-red-600', 'bg-red-900/40');
+                    el.parentElement.classList.remove('animate-pulse');
                 }
-            }
+            });
         }
         setInterval(updateFundingCountdown, 1000);
         updateFundingCountdown();
