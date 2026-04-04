@@ -236,17 +236,17 @@
                 }
                 
                 return `
-                    <div class="flex flex-col ${bgClass} ${blinkClass} bg-black/40 p-2.5 rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-300">
+                    <div class="flex flex-col ${bgClass} ${blinkClass} bg-black/40 p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-300">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
-                                <span class="text-gray-600 font-mono text-xs w-4">${index + 1}</span>
-                                <div class="font-bold text-white text-[15px] tracking-wide">${sym}</div>
+                                <span class="text-gray-500 font-mono text-sm w-4">${index + 1}</span>
+                                <div class="font-bold text-white text-base tracking-wide">${sym}</div>
                             </div>
                             <div class="text-lg font-black ${colorClass} tracking-tighter">${sign}${changeRate}%</div>
                         </div>
-                        <div class="flex justify-between items-center text-[10px] font-mono pl-6">
-                            <div class="text-gray-400">$${turnoverMillions}M</div>
-                            <div class="flex gap-2.5">
+                        <div class="flex justify-between items-center text-xs font-mono pl-6 mt-1 tracking-tight">
+                            <div class="text-gray-300">$${turnoverMillions}M</div>
+                            <div class="flex gap-3">
                                 <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
                                 <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
                             </div>
