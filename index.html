@@ -437,7 +437,7 @@
                                 <div class="font-bold text-white text-lg tracking-wide flex items-center">${sym}</div>
                             </div>
                             <div class="flex items-center gap-3">
-                                ${t.nextFundingTime ? `<span class="text-red-400/80 text-[10px] font-mono flex items-center bg-red-950/40 px-1.5 py-0.5 rounded-sm border border-red-500/20" title="해당 종목의 펀딩비 결제 남은 시간"><i class="fas fa-bomb mr-1 animate-pulse"></i><span class="indiv-funding-timer" data-next-funding="${t.nextFundingTime}">--:--:--</span></span>` : ''}
+                                
                                 <div class="text-xl font-black ${colorClass} tracking-tighter">${sign}${changeRate}%</div>
                             </div>
                         </div>
@@ -445,6 +445,7 @@
                             <div class="text-gray-300">$${turnoverMillions}M</div>
                             <div class="flex gap-4 items-center">
                                 ${upbitListedCoins.has(sym) ? '<span class="text-indigo-400 bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-500/30 text-[10px] font-bold" title="한국 업비트 현물(KRW) 상장 여부">Upbit</span>' : ''}
+                                ${t.nextFundingTime ? `<span class="text-red-400/80 text-xl font-black font-mono flex items-center bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30 mr-1" title="해당 종목의 펀딩비 결제 남은 시간"><i class="fas fa-bomb mr-1 animate-pulse text-lg"></i><span class="indiv-funding-timer" data-next-funding="${t.nextFundingTime}">--:--:--</span></span>` : ''}
                                 ${drawdownStr}
                                 <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
                                 <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
@@ -501,24 +502,24 @@
                 
                 let bDrawdownStr = '';
                 if(bData.drawdown !== undefined) {
-                    bDrawdownStr = `<span class="text-yellow-500 text-[10px] font-mono ml-2 font-bold" title="바이비트 선물의 고점 파괴 수준">Bybit Peak: ${bData.drawdown.toFixed(1)}%</span>`;
+                    bDrawdownStr = `<span class="text-yellow-500 text-[14px] font-mono ml-2 font-bold" title="바이비트 선물의 고점 파괴 수준">Bybit Peak: ${bData.drawdown.toFixed(1)}%</span>`;
                 }
                 
                 const isPump = s.mode === 'pump';
                 const style = isPump ? 'border-red-900/50 bg-red-900/10' : 'border-blue-900/50 bg-blue-900/10';
                 const icon = isPump ? '<i class="fas fa-arrow-up text-red-500"></i>' : '<i class="fas fa-arrow-down text-blue-500"></i>';
-                const statusStr = isPump ? `<span class="text-red-400 text-[10px] font-bold">김치광기 주도 (숏 타점 대기)</span>` : `<span class="text-blue-400 text-[10px] font-bold">업비트발 설거지 (숏 진입 유효)</span>`;
-                const percentStr = isPump ? `<span class="text-red-400">+${upbitChgStr}% <span class="text-[9px] text-gray-500 font-normal ml-1">on Upbit</span></span>` : `<span class="text-blue-400 text-[10px]">09:00기준 급락</span>`;
+                const statusStr = isPump ? `<span class="text-red-400 text-[14px] font-bold">김치광기 주도 (숏 타점 대기)</span>` : `<span class="text-blue-400 text-[14px] font-bold">업비트발 설거지 (숏 진입 유효)</span>`;
+                const percentStr = isPump ? `<span class="text-red-400 text-[14px]">+${upbitChgStr}% <span class="text-[14px] text-gray-500 font-normal ml-1">on Upbit</span></span>` : `<span class="text-blue-400 text-[14px]">09:00기준 급락</span>`;
                 
                 return `
                     <div class="flex flex-col p-2 rounded-lg border ${style} backdrop-blur-sm relative overflow-hidden transition-all hover:border-gray-500">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
-                                <span class="bg-indigo-600/50 border border-indigo-500 text-indigo-100 text-[9px] px-1 rounded-sm font-bold animate-pulse">Upbit Sync</span>
-                                <span class="text-gray-100 text-sm font-bold tracking-wide">${s.sym}</span>
+                                <span class="bg-indigo-600/50 border border-indigo-500 text-indigo-100 text-[12px] px-1 rounded-sm font-bold animate-pulse">Upbit Sync</span>
+                                <span class="text-gray-100 text-lg font-bold tracking-wide">${s.sym}</span>
                             </div>
-                            <div class="flex gap-2 items-center text-xs font-black">
-                                ${bData.nextFundingTime ? `<span class="text-red-400/80 text-[9px] font-mono flex items-center bg-red-950/40 px-1 rounded-sm border border-red-500/20"><i class="fas fa-bomb mr-1 animate-pulse"></i><span class="indiv-funding-timer" data-next-funding="${bData.nextFundingTime}">--:--:--</span></span>` : ''}
+                            <div class="flex gap-2 items-center text-[14px] font-black">
+                                ${bData.nextFundingTime ? `<span class="text-red-400/80 text-[14px] font-mono flex items-center bg-red-950/40 px-1 rounded-sm border border-red-500/20"><i class="fas fa-bomb mr-1 animate-pulse"></i><span class="indiv-funding-timer" data-next-funding="${bData.nextFundingTime}">--:--:--</span></span>` : ''}
                                 <div>${icon} ${percentStr}</div>
                             </div>
                         </div>
@@ -677,7 +678,7 @@
                             <h3 class="font-extrabold text-white text-sm">${v.coin_name}</h3>
                             ${badge}
                         </div>
-                        <p class="text-[11.5px] text-gray-300 leading-relaxed whitespace-pre-line">${v.reason}</p>
+                        <p class="text-[14px] text-gray-300 leading-relaxed whitespace-pre-line mt-2">${v.reason}</p>
                     </div>
                 `;
             }).join('');
