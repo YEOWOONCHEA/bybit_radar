@@ -457,7 +457,7 @@
                             <div class="text-gray-300">$${turnoverMillions}M</div>
                             <div class="flex gap-4 items-center">
                                 ${upbitListedCoins.has(sym) ? '<span class="text-indigo-400 bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-500/30 text-[10px] font-bold" title="한국 업비트 현물(KRW) 상장 여부">Upbit</span>' : ''}
-                                ${t.nextFundingTime ? `<span class="text-red-400/80 text-xl font-black font-mono flex items-center bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30 mr-1" title="해당 종목의 펀딩비 결제 남은 시간"><i class="fas fa-bomb mr-1 animate-pulse text-lg"></i><span class="indiv-funding-timer" data-next-funding="${t.nextFundingTime}">--:--:--</span></span>` : ''}
+                                ${t.nextFundingTime ? `<span class="text-red-400/80 text-xl font-black font-mono flex items-center bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30 mr-1" title="해당 종목의 펀딩비 결제 남은 시간"><i class="fas fa-bomb mr-1 text-lg"></i><span class="indiv-funding-timer" data-next-funding="${t.nextFundingTime}">--:--:--</span></span>` : ''}
                                 ${drawdownStr}
                                 <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
                                 <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
@@ -534,7 +534,7 @@
                                 <span class="text-gray-100 text-lg font-bold tracking-wide">${s.sym}</span>
                             </div>
                             <div class="flex gap-2 items-center text-[14px] font-black">
-                                ${bData.nextFundingTime ? `<span class="text-red-400/80 text-[14px] font-mono flex items-center bg-red-950/40 px-1 rounded-sm border border-red-500/20"><i class="fas fa-bomb mr-1 animate-pulse"></i><span class="indiv-funding-timer" data-next-funding="${bData.nextFundingTime}">--:--:--</span></span>` : ''}
+                                ${bData.nextFundingTime ? `<span class="text-red-400/80 text-[14px] font-mono flex items-center bg-red-950/40 px-1 rounded-sm border border-red-500/20"><i class="fas fa-bomb mr-1 text-red-500"></i><span class="indiv-funding-timer" data-next-funding="${bData.nextFundingTime}">--:--:--</span></span>` : ''}
                                 <div>${icon} ${percentStr}</div>
                             </div>
                         </div>
