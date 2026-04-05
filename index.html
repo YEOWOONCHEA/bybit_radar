@@ -7,8 +7,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #131314; color: #cbd5e1; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(10px); border: 1px solid #2a2d3e; }
+        body { 
+            background: radial-gradient(circle at 90% 10%, #1a1405 0%, #0a0802 100%); 
+            color: #cbd5e1; 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh;
+        }
+        .glass { 
+            background: rgba(30, 20, 5, 0.45); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid #3d2a0e; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
         .gainer-bg { background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%); }
         .loser-bg { background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%); }
         @keyframes neonPulseGainer { 0% { box-shadow: inset 0 0 0px rgba(16,185,129,0); } 50% { box-shadow: inset 0 0 15px rgba(16,185,129,0.5); border-color: rgba(16,185,129,0.8); } 100% { box-shadow: inset 0 0 0px rgba(16,185,129,0); } }
@@ -18,7 +28,7 @@
     </style>
 </head>
 <body class="p-4 lg:p-8">
-    <h1 class="text-3xl font-extrabold text-[#f59e0b] mb-2"><i class="fas fa-satellite-dish"></i> 1004MAS BYBIT RADAR <span class="text-xs text-gray-500 font-normal ml-2 tracking-widest border border-gray-700 px-2 rounded">v2.0 TACTICAL</span></h1>
+    <h1 class="text-3xl font-extrabold text-[#f59e0b] mb-2 drop-shadow-md"><i class="fas fa-satellite-dish"></i> 1004MAS BYBIT RADAR <span class="text-xs text-amber-300 font-normal ml-2 tracking-widest border border-amber-800 bg-amber-900/30 px-2 rounded">v2.0 TACTICAL</span></h1>
     <p class="text-gray-400 mb-6 flex justify-between items-center flex-wrap gap-2">
         <span>글로벌 가상자산 선물 달러 자금 풀 감시망 및 자동 경보 시스템</span>
     </p>
@@ -545,6 +555,7 @@
                     }
 
                     verdicts.push({
+                        raw_id: sym,
                         coin_name: sym,
                         signal: 'green',
                         reason: `🔥 <b>돈(거래대금 $${Math.floor(turnover)}M)</b>이 강하게 쏠리며 <b>가속도(+${vel.toFixed(2)}%)</b>가 폭발 중입니다.\n현재 <b>펀딩비가 마이너스(${fr.toFixed(4)}%)</b> 상태로, 숏(Short) 포지션을 잡은 개미들의 연쇄 청산이 일어나는 '황금 롱(Long) 타점(숏스퀴즈)'일 확률이 매우 높습니다.`
@@ -570,11 +581,19 @@
                     }
 
                     verdicts.push({
+                        raw_id: sym,
                         coin_name: sym,
                         signal: 'red',
                         reason: `💀 <b>고점 대비 폭락(${dd.toFixed(2)}%)</b>하는 전형적인 <b>'설거지(Pump & Dump)'</b> 패턴입니다.\n여기에 돈(거래대금 $${Math.floor(turnover)}M)이 빠져나가며 가속도(${vel.toFixed(2)}%)가 심하게 고꾸라지고 있습니다.\n그럼에도 펀딩비가 플러스(${fr.toFixed(4)}%)이므로 미련을 못 버린 롱(개미) 포지션의 연쇄 청산 폭포수가 터지는 보증된 투매(Short) 타점입니다.`
                     });
                 }
+            });
+
+            // 최신 타점이 위로 올라오도록(밀어서 내려가도록) 타임스탬프로 가장 최근 발생한 순 정렬
+            verdicts.sort((a, b) => {
+                const ta = newVerdictTracker[a.raw_id] || 0;
+                const tb = newVerdictTracker[b.raw_id] || 0;
+                return tb - ta;
             });
 
             // 타점이 완벽하지 않을 때
