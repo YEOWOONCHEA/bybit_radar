@@ -85,7 +85,7 @@
             <!-- 김치 펌핑/투매 저격망 (업비트 동시상장) -->
             <div class="mb-4 border-b border-gray-800 pb-4">
                 <div class="text-[11px] text-indigo-400 font-bold mb-2 flex items-center"><i class="fas fa-won-sign mr-1"></i> 김치 펌핑/투매 저격망 (업비트 원화마켓 상장)</div>
-                <div id="kimchi-sniper-list" class="space-y-2"></div>
+                <div id="kimchi-sniper-list" class="space-y-2"><div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>최초 위성 연결 대기 중...</div></div>
             </div>
             
             <div id="ai-verdict-list" class="space-y-3 overflow-y-auto flex-grow custom-scrollbar">
@@ -281,9 +281,21 @@
         async function fetchUpbitLiveForSniper() {
             if(upbitMarketCodes.length === 0) return { gainers: [], losers: [] };
             try {
-                const query = upbitMarketCodes.join(',');
-                const res = await fetch('https://api.upbit.com/v1/ticker?markets=' + query);
-                const data = await res.json();
+                // 업비트 API는 너무 많은 종목을 한 번에 요청하면 에러(400 Bad Request)를 반환하므로 분할 요청
+                const half = Math.ceil(upbitMarketCodes.length / 2);
+                const query1 = upbitMarketCodes.slice(0, half).join(',');
+                const query2 = upbitMarketCodes.slice(half).join(',');
+                
+                const [res1, res2] = await Promise.all([
+                    fetch('https://api.upbit.com/v1/ticker?markets=' + query1),
+                    fetch('https://api.upbit.com/v1/ticker?markets=' + query2)
+                ]);
+                const data1 = await res1.json();
+                const data2 = await res2.json();
+                
+                const arr1 = Array.isArray(data1) ? data1 : [];
+                const arr2 = Array.isArray(data2) ? data2 : [];
+                const data = [...arr1, ...arr2];
                 
                 data.forEach(t => {
                     const high = parseFloat(t.high_price);
@@ -458,7 +470,10 @@
         }
 
         function renderKimchiSniper(bybitList, upbitMap) {
-            if (!upbitMap || (!upbitMap.gainers.length && !upbitMap.losers.length)) return;
+            if (!upbitMap || (!upbitMap.gainers.length && !upbitMap.losers.length)) {
+                document.getElementById('kimchi-sniper-list').innerHTML = '<div class="text-[12px] text-red-500 text-center py-2 bg-red-900/10 rounded border border-red-800/50"><i class="fas fa-exclamation-triangle mr-1"></i> 업비트(KRW) 데이터를 블러올 수 없어 재접속 대기중입니다...</div>';
+                return;
+            }
             
             const bybitLookup = {};
             bybitList.forEach(t => {
@@ -492,7 +507,7 @@
             });
             
             if(snipers.length === 0) {
-                document.getElementById('kimchi-sniper-list').innerHTML = '<div class="text-[10px] text-gray-500 text-center py-2 bg-black/30 rounded border border-gray-800">현재 김치 펌핑/투매 저격 타겟이 없습니다.</div>';
+                document.getElementById('kimchi-sniper-list').innerHTML = '<div class="text-[13px] text-gray-500 font-bold text-center py-3 bg-black/30 rounded border border-gray-800"><i class="fas fa-eye text-blue-500 mr-1 animate-pulse"></i> 현재 타겟망에 포착된 유효한 펌핑/투매 타점이 없습니다. 모니터링 중입니다...</div>';
                 return;
             }
             
