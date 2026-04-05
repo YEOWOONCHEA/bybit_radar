@@ -28,7 +28,7 @@
         <!-- 상승 Top 20 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-green-900/10 flex flex-col h-[calc(100vh-120px)]">
             <h2 class="text-lg flex justify-between items-center font-bold text-white mb-4 border-b border-gray-800 pb-2">
-                <span><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 20)</span>
+                <span><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 30)</span>
                 <span class="text-red-400 font-mono text-xs bg-red-900/40 px-2 py-0.5 rounded border border-red-500/30" title="01:00, 09:00, 17:00 정각 펀딩비 결제 남은 시간">
                     <i class="fas fa-bomb mr-1 animate-ping"></i> <strong class="fr-countdown-display tracking-widest">--:--:--</strong>
                 </span>
@@ -41,7 +41,7 @@
         <!-- 설거지 숏 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-red-900/10 flex flex-col h-[calc(100vh-120px)]">
             <h2 class="text-lg flex justify-between items-center font-bold text-white mb-4 border-b border-gray-800 pb-2">
-                <span><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 설거지 폭포수 (Drawdown 20)</span>
+                <span><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 설거지 폭포수 (Drawdown 30)</span>
                 <span class="text-red-400 font-mono text-xs bg-red-900/40 px-2 py-0.5 rounded border border-red-500/30" title="01:00, 09:00, 17:00 정각 펀딩비 결제 남은 시간">
                     <i class="fas fa-bomb mr-1 animate-ping"></i> <strong class="fr-countdown-display tracking-widest">--:--:--</strong>
                 </span>
@@ -60,6 +60,12 @@
             
             <!-- 대장주 지휘부 고정 패널 -->
             <div id="market-leaders-list" class="space-y-2 mb-4 border-b border-gray-800 pb-4"></div>
+            
+            <!-- 김치 펌핑/투매 저격망 (업비트 동시상장) -->
+            <div class="mb-4 border-b border-gray-800 pb-4">
+                <div class="text-[11px] text-indigo-400 font-bold mb-2 flex items-center"><i class="fas fa-won-sign mr-1"></i> 김치 펌핑/투매 저격망 (업비트 원화마켓 상장)</div>
+                <div id="kimchi-sniper-list" class="space-y-2"></div>
+            </div>
             
             <div id="ai-verdict-list" class="space-y-3 overflow-y-auto flex-grow custom-scrollbar">
                 <div class="text-gray-400 text-sm"><i class="fas fa-satellite mr-2"></i>오더플로우 분석 대기...</div>
@@ -94,6 +100,7 @@
     <script>
         let previousGainers = new Set();
         let previousLosers = new Set();
+        let upbitListedCoins = new Set();
         let isFirstLoad = true;
         let audioEnabled = false;
         
@@ -248,18 +255,20 @@
                 
                 // 롱 타겟: 24시간 등락률 플러스 순 유지
                 const gainersList = [...list].sort((a,b) => parseFloat(b.price24hPcnt) - parseFloat(a.price24hPcnt));
-                const top20 = gainersList.slice(0, 20);
+                const top30 = gainersList.slice(0, 30);
                 
                 // 숏 타겟: 고점 대비 하락률(Drawdown)이 가장 심한 순서대로 세팅 (세력의 펌프앤덤프 저격용)
                 const losersList = [...list].sort((a,b) => a.drawdown - b.drawdown);
-                const drawdown20 = losersList.slice(0, 20);
+                const drawdown30 = losersList.slice(0, 30);
 
                 renderLeaders(leaders);
-                renderList(top20, 'top-gainers-list', 'gainer');
-                renderList(drawdown20, 'top-losers-list', 'loser');
+                renderList(top30, 'top-gainers-list', 'gainer');
+                renderList(drawdown30, 'top-losers-list', 'loser');
                 
-                checkAlerts(top20, drawdown20);
-                calculateAIVerdict(top20, drawdown20);
+                renderKimchiSniper(top30, drawdown30);
+                
+                checkAlerts(top30, drawdown30);
+                calculateAIVerdict(top30, drawdown30);
                 
                 isFirstLoad = false;
             } catch (error) { console.error("Bybit Fetch Error:", error); }
@@ -293,7 +302,8 @@
                         </div>
                         <div class="flex justify-between items-center text-base font-bold font-mono pl-7 mt-1.5 tracking-tight">
                             <div class="text-gray-400">$${turnoverMillions}M</div>
-                            <div class="flex gap-4">
+                            <div class="flex gap-4 items-center">
+                                ${upbitListedCoins.has(sym) ? '<span class="text-indigo-400 bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-500/30 text-[10px] font-bold" title="한국 업비트 현물(KRW) 상장 여부">Upbit</span>' : ''}
                                 ${t.drawdown >= -3 
                                     ? `<span title="고점 유지력(초강세)"><i class="fas fa-fire text-blue-400 mr-1 text-sm"></i>Peak: <span class="text-blue-400 font-bold">${t.drawdown.toFixed(1)}%</span></span>`
                                     : (t.drawdown >= -10 
@@ -363,6 +373,7 @@
                         <div class="flex justify-between items-center text-base font-bold font-mono pl-6 mt-1.5 tracking-tight">
                             <div class="text-gray-300">$${turnoverMillions}M</div>
                             <div class="flex gap-4 items-center">
+                                ${upbitListedCoins.has(sym) ? '<span class="text-indigo-400 bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-500/30 text-[10px] font-bold" title="한국 업비트 현물(KRW) 상장 여부">Upbit</span>' : ''}
                                 ${drawdownStr}
                                 <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
                                 <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
@@ -374,9 +385,62 @@
             document.getElementById(elementId).innerHTML = listHTML;
         }
 
+        function renderKimchiSniper(top30, drawdown30) {
+            const snipers = [];
+            
+            top30.forEach(t => {
+                const sym = t.symbol.replace('USDT', '');
+                if(upbitListedCoins.has(sym) && (parseFloat(t.price24hPcnt) > 0.05 || t.velocity1m > 0.5)) {
+                    snipers.push({...t, mode: 'pump'});
+                }
+            });
+            
+            drawdown30.forEach(t => {
+                const sym = t.symbol.replace('USDT', '');
+                if(upbitListedCoins.has(sym) && t.drawdown < -5 && !snipers.find(s => s.symbol === t.symbol)) {
+                    snipers.push({...t, mode: 'dump'});
+                }
+            });
+            
+            if(snipers.length === 0) {
+                document.getElementById('kimchi-sniper-list').innerHTML = '<div class="text-[10px] text-gray-500 text-center py-2 bg-black/30 rounded border border-gray-800">현재 김치 펌핑/투매 저격 타겟이 없습니다.</div>';
+                return;
+            }
+            
+            const html = snipers.slice(0, 4).map(t => {
+                const sym = t.symbol.replace('USDT', '');
+                const chg = (parseFloat(t.price24hPcnt) * 100).toFixed(2);
+                
+                const isPump = t.mode === 'pump';
+                const style = isPump ? 'border-red-900/50 bg-red-900/10' : 'border-blue-900/50 bg-blue-900/10';
+                const icon = isPump ? '<i class="fas fa-arrow-up text-red-500"></i>' : '<i class="fas fa-arrow-down text-blue-500"></i>';
+                const statusStr = isPump ? `<span class="text-red-400 text-[10px] font-bold">김치광기 (업비트 주도 펌핑)</span>` : `<span class="text-blue-400 text-[10px] font-bold">김치 투매 (해외 봇 동반 하락)</span>`;
+                
+                return `
+                    <div class="flex flex-col p-2 rounded-lg border ${style} backdrop-blur-sm relative overflow-hidden transition-all hover:border-gray-500">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-indigo-600/50 border border-indigo-500 text-indigo-100 text-[9px] px-1 rounded-sm font-bold">Upbit</span>
+                                <span class="text-gray-100 text-sm font-bold tracking-wide">${sym}</span>
+                            </div>
+                            <div class="flex gap-1 items-center text-xs font-black">
+                                ${icon} <span class="${isPump ? 'text-red-400' : 'text-blue-400'}">${chg > 0 ? '+' : ''}${chg}%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            ${statusStr}
+                            <span class="text-gray-400 text-[10px] font-mono">Peak: ${t.drawdown.toFixed(1)}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('kimchi-sniper-list').innerHTML = html;
+        }
+
         function buildAlertMessage(mode, items) {
             if (items.length === 0) return "";
-            const title = mode === 'long' ? "🚀 <b>[롱 타점 포착] 상승 Top 20 진입</b>" : "🩸 <b>[숏 타점 포착] 설거지 폭포수 진입</b>";
+            const title = mode === 'long' ? "🚀 <b>[롱 타점 포착] 상승 Top 30 진입</b>" : "🩸 <b>[숏 타점 포착] 설거지 폭포수 진입</b>";
             let msg = title + "\n\n";
             items.forEach(t => {
                 const sym = t.symbol.replace('USDT', '');
@@ -387,18 +451,18 @@
             return msg;
         }
 
-        function checkAlerts(top20, drawdown20) {
+        function checkAlerts(top30, drawdown30) {
             if(isFirstLoad) {
-                top20.forEach(t => previousGainers.add(t.symbol));
-                drawdown20.forEach(t => previousLosers.add(t.symbol));
+                top30.forEach(t => previousGainers.add(t.symbol));
+                drawdown30.forEach(t => previousLosers.add(t.symbol));
                 return;
             }
             
-            const currentGainers = new Set(top20.map(t => t.symbol));
-            const currentLosers = new Set(drawdown20.map(t => t.symbol));
+            const currentGainers = new Set(top30.map(t => t.symbol));
+            const currentLosers = new Set(drawdown30.map(t => t.symbol));
             
-            const newlyAddedGainers = top20.filter(t => !previousGainers.has(t.symbol));
-            const newlyAddedLosers = drawdown20.filter(t => !previousLosers.has(t.symbol));
+            const newlyAddedGainers = top30.filter(t => !previousGainers.has(t.symbol));
+            const newlyAddedLosers = drawdown30.filter(t => !previousLosers.has(t.symbol));
             
             if(newlyAddedGainers.length > 0) {
                 playSound('long');
@@ -416,11 +480,11 @@
             previousLosers = currentLosers;
         }
 
-        function calculateAIVerdict(top20, drawdown20) {
+        function calculateAIVerdict(top30, drawdown30) {
             const verdicts = [];
 
-            // 롱 타겟 분석 (상승 Top 20)
-            top20.forEach(t => {
+            // 롱 타겟 분석 (상승 Top 30)
+            top30.forEach(t => {
                 const sym = t.symbol.replace('USDT', '');
                 const turnover = parseFloat(t.turnover24h) / 1000000;
                 const vel = t.velocity1m;
@@ -442,8 +506,8 @@
                 }
             });
 
-            // 숏 타겟 분석 (고점 대비 폭락 Drawdown 20)
-            drawdown20.forEach(t => {
+            // 숏 타겟 분석 (고점 대비 폭락 Drawdown 30)
+            drawdown30.forEach(t => {
                 const sym = t.symbol.replace('USDT', '');
                 const turnover = parseFloat(t.turnover24h) / 1000000;
                 const vel = t.velocity1m;
@@ -517,6 +581,16 @@
         }
         
         async function initBybitEngine() {
+            try {
+                const upRes = await fetch('https://api.upbit.com/v1/market/all');
+                const upData = await upRes.json();
+                upData.forEach(m => {
+                    if (m.market.startsWith('KRW-')) {
+                        upbitListedCoins.add(m.market.replace('KRW-', ''));
+                    }
+                });
+            } catch(e) { console.error("Upbit Sync Error:", e); }
+
             loadTelegramSettings();
             fetchBybitData();
             setInterval(fetchBybitData, 2000);
