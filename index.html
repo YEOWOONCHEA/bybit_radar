@@ -35,8 +35,18 @@
                 <span>글로벌 가상자산 선물 달러 자금 풀 감시망 및 자동 경보 시스템</span>
             </p>
         </div>
-        <div id="live-clock" class="text-2xl font-mono font-black text-amber-500 bg-black/60 px-5 py-2 rounded-xl border border-amber-900/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center tracking-wider">
-            --:--:--
+        <div class="flex items-center gap-4">
+            <!-- 사운드 및 셋팅 버튼 -->
+            <button onclick="enableAudio()" id="btn-audio" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-[14px] text-gray-400 hover:text-white border border-gray-600 transition-colors tooltip" title="사운드 알람 권한 승인">
+                <i class="fas fa-volume-mute" id="audio-icon"></i>
+            </button>
+            <button onclick="document.getElementById('settings-modal').classList.remove('hidden')" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-[14px] text-gray-400 hover:text-white border border-gray-600 transition-colors tooltip" title="텔레그램 환경설정">
+                <i class="fas fa-cog"></i> 설 정
+            </button>
+            
+            <div id="live-clock" class="text-2xl font-mono font-black text-[#f59e0b] bg-black/60 px-5 py-2 rounded-xl border border-amber-900/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center tracking-wider">
+                --:--:--
+            </div>
         </div>
     </div>
     
@@ -45,10 +55,7 @@
         <!-- 상승 Top 20 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-green-900/10 flex flex-col h-[calc(100vh-120px)]">
             <h2 class="text-lg flex justify-between items-center font-bold text-white mb-4 border-b border-gray-800 pb-2">
-                <span><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 30)</span>
-                <span class="text-red-400 font-mono text-xs bg-red-900/40 px-2 py-0.5 rounded border border-red-500/30" title="01:00, 09:00, 17:00 정각 펀딩비 결제 남은 시간">
-                    <i class="fas fa-bomb mr-1 animate-ping"></i> <strong class="fr-countdown-display tracking-widest">--:--:--</strong>
-                </span>
+                <span><i class="fas fa-rocket text-green-500 mr-2"></i> 롱(Long) 타겟: 자금 쏠림 (Top 10)</span>
             </h2>
             <div id="top-gainers-list" class="space-y-2 overflow-y-auto flex-grow custom-scrollbar">
                 <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
@@ -58,10 +65,7 @@
         <!-- 설거지 숏 레이더 -->
         <div class="lg:col-span-4 glass p-4 rounded-xl relative overflow-hidden shadow-lg shadow-red-900/10 flex flex-col h-[calc(100vh-120px)]">
             <h2 class="text-lg flex justify-between items-center font-bold text-white mb-4 border-b border-gray-800 pb-2">
-                <span><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 설거지 폭포수 (Drawdown 10) <span class="bg-gray-800 text-gray-300 text-[10px] px-1.5 py-0.5 rounded border border-gray-700 ml-1">$3.5M↑</span></span>
-                <span class="text-red-400 font-mono text-xs bg-red-900/40 px-2 py-0.5 rounded border border-red-500/30" title="01:00, 09:00, 17:00 정각 펀딩비 결제 남은 시간">
-                    <i class="fas fa-bomb mr-1 animate-ping"></i> <strong class="fr-countdown-display tracking-widest">--:--:--</strong>
-                </span>
+                <span><i class="fas fa-meteor text-red-500 mr-2"></i> 숏(Short) 타겟: 기술적 반등 (Drawdown 10) <span class="bg-gray-800 text-gray-300 text-[10px] px-1.5 py-0.5 rounded border border-gray-700 ml-1">$3.5M↑</span></span>
             </h2>
             <div id="top-losers-list" class="space-y-2 overflow-y-auto flex-grow custom-scrollbar">
                 <div class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>바이비트 위성 연결 중...</div>
@@ -94,24 +98,37 @@
                 <div><i class="fas fa-percentage text-gray-400 mr-1 w-3"></i> FR  : 현재 펀딩비 (-는 숏스퀴즈 주의)</div>
             </div>
             
-            <!-- 텔레그램 연동 셋팅 -->
-            <div class="mt-4 p-3 bg-black/30 border border-gray-800 rounded-lg">
-                <div class="text-[11px] text-gray-300 mb-2 font-bold"><i class="fab fa-telegram text-blue-400"></i> Telegram 봇 연동 (로컬 저장소 캐싱)</div>
-                <div class="space-y-2">
-                    <input type="password" id="tg_bot_token" placeholder="Bot Token (ex: 1234:ABC...)" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-[10px] text-white focus:outline-none focus:border-blue-500">
-                    <input type="text" id="tg_chat_id" placeholder="Chat ID (ex: 1234567890)" class="w-full bg-gray-900 border border-gray-700 rounded p-1 text-[10px] text-white focus:outline-none focus:border-blue-500">
-                    <button onclick="saveTelegramSettings()" class="w-full bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 rounded p-1.5 text-[10px] transition-colors"><i class="fas fa-save mr-1"></i> 설정 저장 및 테스트 발송</button>
-                </div>
-            </div>
 
-            <div class="mt-4 text-center">
-                <button onclick="enableAudio()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs text-white border border-gray-600 transition-colors w-full"><i class="fas fa-play mr-1"></i> 알람 시스템 가동 (사운드 권한 승인)</button>
-            </div>
         </div>
     </div>
     
-    <div class="mt-8 text-center text-sm pb-8">
+    <div class="mt-8 text-center text-sm pb-8 relative z-10">
         <a href="https://www.1004mas.com" class="text-yellow-500 hover:text-white transition-colors underline"><i class="fas fa-door-open mr-1"></i> 중앙 포탈로 복귀</a>
+    </div>
+    
+    <!-- 환경 설정 모달 -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex justify-center items-center">
+        <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-[0_0_30px_rgba(0,0,0,0.8)] relative">
+            <button onclick="document.getElementById('settings-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            <h3 class="text-xl font-black text-white mb-6 border-b border-gray-800 pb-3"><i class="fas fa-cog mr-2 text-gray-400"></i> 환경 설정</h3>
+            
+            <div class="mb-4 space-y-3">
+                <div class="text-[14px] text-gray-300 font-bold mb-2"><i class="fab fa-telegram text-blue-400 text-lg mr-1"></i> Telegram 봇 연동 (알람 발송)</div>
+                <input type="password" id="tg_bot_token" placeholder="Bot Token (ex: 1234:ABC...)" class="w-full bg-black border border-gray-700 rounded p-3 text-[14px] text-white focus:outline-none focus:border-blue-500 transition-colors">
+                <input type="text" id="tg_chat_id" placeholder="Chat ID (ex: 1234567890)" class="w-full bg-black border border-gray-700 rounded p-3 text-[14px] text-white focus:outline-none focus:border-blue-500 transition-colors">
+                <button onclick="saveTelegramSettings()" class="w-full bg-[#f59e0b]/30 hover:bg-[#f59e0b]/70 border border-[#f59e0b]/50 text-amber-200 mt-2 rounded p-3 text-[15px] transition-colors font-bold shadow-lg"><i class="fas fa-save mr-1"></i> 설정 저장 및 테스트 발송</button>
+            </div>
+            
+            <div class="mt-8 border-t border-gray-800 pt-6">
+                <h4 class="text-gray-400 font-bold mb-3 text-sm">지표 설명</h4>
+                <div class="text-[13px] text-gray-500 font-mono space-y-2">
+                    <div class="flex items-start"><i class="fas fa-bolt text-yellow-500 mr-2 mt-1"></i> <div><strong class="text-gray-300">Vel</strong> : 최근 1분 가격 가속도<br><span class="text-[11px]">(순간적인 펌핑/덤핑 포착)</span></div></div>
+                    <div class="flex items-start"><i class="fas fa-fire text-red-500 mr-2 mt-1"></i> <div><strong class="text-gray-300">Peak</strong> : 당일 고점 대비 방어력<br><span class="text-[11px]">(음수가 클수록 윗꼬리 길게 달고 설거지 중)</span></div></div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -168,8 +185,16 @@
         
         function enableAudio() {
             audioEnabled = true;
-            document.getElementById('audio-status').innerText = '활성화됨 (대기중)';
-            document.getElementById('audio-status').className = 'text-green-400 font-bold';
+            const icon = document.getElementById('audio-icon');
+            if (icon) {
+                icon.classList.remove('fa-volume-mute');
+                icon.classList.add('fa-volume-up');
+                icon.classList.add('text-green-400');
+            }
+            if (document.getElementById('audio-status')) {
+                document.getElementById('audio-status').innerText = '활성화됨';
+                document.getElementById('audio-status').className = 'text-green-400 font-bold';
+            }
             playSound('test');
         }
 
