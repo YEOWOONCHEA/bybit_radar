@@ -101,6 +101,7 @@
         let previousGainers = new Set();
         let previousLosers = new Set();
         let upbitListedCoins = new Set();
+        let upbitMarketCodes = [];
         let isFirstLoad = true;
         let audioEnabled = false;
         
@@ -235,12 +236,34 @@
             return 0;
         }
 
-        async function fetchBybitData() {
+        async function fetchUpbitLiveForSniper() {
+            if(upbitMarketCodes.length === 0) return { gainers: [], losers: [] };
             try {
-                const res = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
+                const query = upbitMarketCodes.join(',');
+                const res = await fetch('https://api.upbit.com/v1/ticker?markets=' + query);
                 const data = await res.json();
                 
-                let list = data.result.list.filter(t => t.symbol.endsWith('USDT'));
+                data.forEach(t => {
+                    const high = parseFloat(t.high_price);
+                    const last = parseFloat(t.trade_price);
+                    t.drawdown = high > 0 ? ((last - high) / high) * 100 : 0;
+                });
+                
+                const gainers = [...data].sort((a,b) => b.signed_change_rate - a.signed_change_rate).slice(0, 20);
+                const losers = [...data].sort((a,b) => a.drawdown - b.drawdown).slice(0, 20);
+                return { gainers, losers };
+            } catch(e) { return { gainers: [], losers: [] }; }
+        }
+
+        async function fetchBybitData() {
+            try {
+                const [bybitRes, upbitMap] = await Promise.all([
+                    fetch('https://api.bybit.com/v5/market/tickers?category=linear'),
+                    fetchUpbitLiveForSniper()
+                ]);
+                const bybitData = await bybitRes.json();
+                
+                let list = bybitData.result.list.filter(t => t.symbol.endsWith('USDT'));
                 
                 list.forEach(t => { 
                     t.velocity1m = updateVelocity(t.symbol, t.lastPrice); 
@@ -265,7 +288,7 @@
                 renderList(top30, 'top-gainers-list', 'gainer');
                 renderList(drawdown30, 'top-losers-list', 'loser');
                 
-                renderKimchiSniper(top30, drawdown30);
+                renderKimchiSniper(list, upbitMap);
                 
                 checkAlerts(top30, drawdown30);
                 calculateAIVerdict(top30, drawdown30);
@@ -385,20 +408,37 @@
             document.getElementById(elementId).innerHTML = listHTML;
         }
 
-        function renderKimchiSniper(top30, drawdown30) {
+        function renderKimchiSniper(bybitList, upbitMap) {
+            if (!upbitMap || (!upbitMap.gainers.length && !upbitMap.losers.length)) return;
+            
+            const bybitLookup = {};
+            bybitList.forEach(t => {
+                if(t.symbol.endsWith('USDT')) bybitLookup[t.symbol.replace('USDT', '')] = t;
+            });
+
             const snipers = [];
             
-            top30.forEach(t => {
-                const sym = t.symbol.replace('USDT', '');
-                if(upbitListedCoins.has(sym) && (parseFloat(t.price24hPcnt) > 0.05 || t.velocity1m > 0.5)) {
-                    snipers.push({...t, mode: 'pump'});
+            upbitMap.gainers.forEach(t => {
+                const sym = t.market.replace('KRW-', '');
+                if(bybitLookup[sym] && (t.signed_change_rate > 0.05)) {
+                    snipers.push({
+                        sym: sym,
+                        upbitChg: t.signed_change_rate,
+                        bybitData: bybitLookup[sym],
+                        mode: 'pump'
+                    });
                 }
             });
             
-            drawdown30.forEach(t => {
-                const sym = t.symbol.replace('USDT', '');
-                if(upbitListedCoins.has(sym) && t.drawdown < -5 && !snipers.find(s => s.symbol === t.symbol)) {
-                    snipers.push({...t, mode: 'dump'});
+            upbitMap.losers.forEach(t => {
+                const sym = t.market.replace('KRW-', '');
+                if(bybitLookup[sym] && t.drawdown < -5 && !snipers.find(s => s.sym === sym)) {
+                    snipers.push({
+                        sym: sym,
+                        upbitDrawdown: t.drawdown,
+                        bybitData: bybitLookup[sym],
+                        mode: 'dump'
+                    });
                 }
             });
             
@@ -407,29 +447,35 @@
                 return;
             }
             
-            const html = snipers.slice(0, 4).map(t => {
-                const sym = t.symbol.replace('USDT', '');
-                const chg = (parseFloat(t.price24hPcnt) * 100).toFixed(2);
+            const html = snipers.slice(0, 4).map(s => {
+                const bData = s.bybitData;
+                const upbitChgStr = (s.upbitChg * 100).toFixed(2);
                 
-                const isPump = t.mode === 'pump';
+                let bDrawdownStr = '';
+                if(bData.drawdown !== undefined) {
+                    bDrawdownStr = `<span class="text-yellow-500 text-[10px] font-mono ml-2 font-bold" title="바이비트 선물의 고점 파괴 수준">Bybit Peak: ${bData.drawdown.toFixed(1)}%</span>`;
+                }
+                
+                const isPump = s.mode === 'pump';
                 const style = isPump ? 'border-red-900/50 bg-red-900/10' : 'border-blue-900/50 bg-blue-900/10';
                 const icon = isPump ? '<i class="fas fa-arrow-up text-red-500"></i>' : '<i class="fas fa-arrow-down text-blue-500"></i>';
-                const statusStr = isPump ? `<span class="text-red-400 text-[10px] font-bold">김치광기 (업비트 주도 펌핑)</span>` : `<span class="text-blue-400 text-[10px] font-bold">김치 투매 (해외 봇 동반 하락)</span>`;
+                const statusStr = isPump ? `<span class="text-red-400 text-[10px] font-bold">김치광기 주도 (숏 타점 대기)</span>` : `<span class="text-blue-400 text-[10px] font-bold">업비트발 설거지 (숏 진입 유효)</span>`;
+                const percentStr = isPump ? `<span class="text-red-400">+${upbitChgStr}% <span class="text-[9px] text-gray-500 font-normal ml-1">on Upbit</span></span>` : `<span class="text-blue-400 text-[10px]">09:00기준 급락</span>`;
                 
                 return `
                     <div class="flex flex-col p-2 rounded-lg border ${style} backdrop-blur-sm relative overflow-hidden transition-all hover:border-gray-500">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
-                                <span class="bg-indigo-600/50 border border-indigo-500 text-indigo-100 text-[9px] px-1 rounded-sm font-bold">Upbit</span>
-                                <span class="text-gray-100 text-sm font-bold tracking-wide">${sym}</span>
+                                <span class="bg-indigo-600/50 border border-indigo-500 text-indigo-100 text-[9px] px-1 rounded-sm font-bold animate-pulse">Upbit Sync</span>
+                                <span class="text-gray-100 text-sm font-bold tracking-wide">${s.sym}</span>
                             </div>
                             <div class="flex gap-1 items-center text-xs font-black">
-                                ${icon} <span class="${isPump ? 'text-red-400' : 'text-blue-400'}">${chg > 0 ? '+' : ''}${chg}%</span>
+                                ${icon} ${percentStr}
                             </div>
                         </div>
                         <div class="flex justify-between items-center mt-1">
                             ${statusStr}
-                            <span class="text-gray-400 text-[10px] font-mono">Peak: ${t.drawdown.toFixed(1)}%</span>
+                            ${bDrawdownStr}
                         </div>
                     </div>
                 `;
@@ -587,6 +633,7 @@
                 upData.forEach(m => {
                     if (m.market.startsWith('KRW-')) {
                         upbitListedCoins.add(m.market.replace('KRW-', ''));
+                        upbitMarketCodes.push(m.market);
                     }
                 });
             } catch(e) { console.error("Upbit Sync Error:", e); }
