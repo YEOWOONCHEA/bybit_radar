@@ -43,6 +43,10 @@
             <button onclick="document.getElementById('settings-modal').classList.remove('hidden')" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-[14px] text-gray-400 hover:text-white border border-gray-600 transition-colors tooltip" title="텔레그램 환경설정">
                 <i class="fas fa-cog"></i> 설 정
             </button>
+            <div class="flex flex-col items-center mr-2 bg-red-950/40 p-1.5 rounded-lg border border-red-900/50 cursor-help" title="바이비트 펀딩비 결제 남은 시간 (공통)">
+                <div class="text-[10px] text-red-300 font-bold mb-0.5"><i class="fas fa-bomb mr-1"></i>펀딩비 결제</div>
+                <div class="fr-countdown-display text-lg font-mono font-black text-red-500 tracking-wider">--:--:--</div>
+            </div>
             
             <div id="live-clock" class="text-2xl font-mono font-black text-[#f59e0b] bg-black/60 px-5 py-2 rounded-xl border border-amber-900/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center tracking-wider">
                 --:--:--
@@ -468,7 +472,6 @@
                             <div class="text-gray-300">$${turnoverMillions}M</div>
                             <div class="flex gap-4 items-center">
                                 ${upbitListedCoins.has(sym) ? '<span class="text-indigo-400 bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-500/30 text-[10px] font-bold" title="한국 업비트 현물(KRW) 상장 여부">Upbit</span>' : ''}
-                                ${t.nextFundingTime ? `<span class="text-red-400/80 text-xl font-black font-mono flex items-center bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30 mr-1" title="해당 종목의 펀딩비 결제 남은 시간"><i class="fas fa-bomb mr-1 text-lg"></i><span class="indiv-funding-timer" data-next-funding="${t.nextFundingTime}">--:--:--</span></span>` : ''}
                                 ${drawdownStr}
                                 <span title="1분 단기 가속도">Vel: <span class="${velColor}">${velSign}${vel.toFixed(2)}%</span></span>
                                 <span title="현재 펀딩비(Funding Rate)">FR: <span class="${frColor}">${fundingRateStr}%</span></span>
@@ -493,27 +496,31 @@
 
             const snipers = [];
             
+            let pumpCount = 0;
             upbitMap.gainers.forEach(t => {
                 const sym = t.market.replace('KRW-', '');
-                if(bybitLookup[sym] && (t.signed_change_rate > 0.05)) {
+                if(bybitLookup[sym] && pumpCount < 2) {
                     snipers.push({
                         sym: sym,
                         upbitChg: t.signed_change_rate,
                         bybitData: bybitLookup[sym],
                         mode: 'pump'
                     });
+                    pumpCount++;
                 }
             });
             
+            let dumpCount = 0;
             upbitMap.losers.forEach(t => {
                 const sym = t.market.replace('KRW-', '');
-                if(bybitLookup[sym] && t.drawdown < -5 && !snipers.find(s => s.sym === sym)) {
+                if(bybitLookup[sym] && !snipers.find(s => s.sym === sym) && dumpCount < 2) {
                     snipers.push({
                         sym: sym,
                         upbitDrawdown: t.drawdown,
                         bybitData: bybitLookup[sym],
                         mode: 'dump'
                     });
+                    dumpCount++;
                 }
             });
             
@@ -545,7 +552,6 @@
                                 <span class="text-gray-100 text-lg font-bold tracking-wide">${s.sym}</span>
                             </div>
                             <div class="flex gap-2 items-center text-[14px] font-black">
-                                ${bData.nextFundingTime ? `<span class="text-red-400/80 text-[14px] font-mono flex items-center bg-red-950/40 px-1 rounded-sm border border-red-500/20"><i class="fas fa-bomb mr-1 text-red-500"></i><span class="indiv-funding-timer" data-next-funding="${bData.nextFundingTime}">--:--:--</span></span>` : ''}
                                 <div>${icon} ${percentStr}</div>
                             </div>
                         </div>
