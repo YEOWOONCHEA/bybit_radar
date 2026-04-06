@@ -460,12 +460,21 @@
                     }
                 }
                 
+                // --- 제갈량 정수리 롱 저격(숏 대기) 판별 ---
+                let snipeStyle = 'border-gray-800';
+                let snipeBadge = '';
+                // 롱 타겟(gainer) 중, Peak 고점( -2.5% 이상 ) 이면서 펀딩비가 양수(0.005% 이상)일 때
+                if (mode === 'gainer' && t.drawdown >= -2.5 && fundingRate >= 0.00005) {
+                    snipeStyle = 'border-purple-500/80 shadow-[0_0_15px_rgba(168,85,247,0.3)] bg-purple-900/20';
+                    snipeBadge = '<span class="ml-2 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg animate-pulse" title="세력의 고점 설거지가 임박한 숏(Short) 최적의 먹잇감">고점숏(Snipe) 대기</span>';
+                }
+                
                 return `
-                    <div class="flex flex-col ${bgClass} ${blinkClass} bg-black/40 p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-300">
+                    <div class="flex flex-col ${bgClass} ${blinkClass} ${snipeStyle} bg-black/40 p-3 rounded-lg border hover:border-gray-600 transition-all duration-300">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
                                 <span class="text-gray-500 font-mono text-base w-4">${index + 1}</span>
-                                <div class="font-bold text-white text-lg tracking-wide flex items-center">${sym}</div>
+                                <div class="font-bold text-white text-lg tracking-wide flex items-center">${sym} ${snipeBadge}</div>
                             </div>
                             <div class="flex items-center gap-3">
                                 
