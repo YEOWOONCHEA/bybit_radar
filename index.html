@@ -3,84 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>바이비트(Bybit) OMNISCIENCE 레이더 v3.0</title>
+    <title>OMNISCIENCE BYBIT RADAR v3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { 
-            background: radial-gradient(circle at 90% 10%, #1a1405 0%, #0a0802 100%); 
-            color: #cbd5e1; 
-            font-family: 'Inter', sans-serif; 
+            background-color: #030712;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.05), transparent 25%);
+            color: #e2e8f0; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
             min-height: 100vh;
         }
-        .glass { 
-            background: rgba(30, 20, 5, 0.45); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid #3d2a0e; 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        .mono-num { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Premium Glass Panel */
+        .glass-panel { 
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 1.25rem;
         }
-        .gainer-bg { background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%); }
-        .loser-bg { background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%); }
+        
+        /* Item Cards */
+        .coin-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .coin-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .gainer-card { border-left: 3px solid #10b981; }
+        .gainer-card:hover { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15); }
+        
+        .loser-card { border-left: 3px solid #f43f5e; }
+        .loser-card:hover { box-shadow: 0 4px 20px rgba(244, 63, 94, 0.15); }
+
+        /* Badges */
+        .metric-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.375rem;
+            padding: 0.125rem 0.375rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        /* Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.3); border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.6); }
-        @keyframes neonPulseGainer { 0% { box-shadow: inset 0 0 0px rgba(16,185,129,0); } 50% { box-shadow: inset 0 0 15px rgba(16,185,129,0.5); border-color: rgba(16,185,129,0.8); } 100% { box-shadow: inset 0 0 0px rgba(16,185,129,0); } }
-        @keyframes neonPulseLoser { 0% { box-shadow: inset 0 0 0px rgba(239,68,68,0); } 50% { box-shadow: inset 0 0 15px rgba(239,68,68,0.5); border-color: rgba(239,68,68,0.8); } 100% { box-shadow: inset 0 0 0px rgba(239,68,68,0); } }
-        .blink-gainer { animation: neonPulseGainer 1.5s infinite; }
-        .blink-loser { animation: neonPulseLoser 1.5s infinite; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        
+        /* AI Pulse Effect */
+        @keyframes ai-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(168, 85, 247, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+        }
+        .ai-active { animation: ai-pulse 2s infinite; }
+        
+        /* Gradient Text */
+        .text-gradient {
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-gradient-gold {
+            background: linear-gradient(to right, #fcd34d, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
-<body class="p-4 lg:p-8">
-    <div class="flex justify-between items-start mb-6 w-full">
-        <div>
-            <h1 class="text-3xl font-extrabold text-[#f59e0b] mb-2 drop-shadow-md">
-                <i class="fas fa-satellite-dish"></i> OMNISCIENCE BYBIT RADAR 
-                <span class="text-xs text-amber-300 font-normal ml-2 tracking-widest border border-amber-800 bg-amber-900/30 px-2 rounded">v3.0 C.O.T</span>
-            </h1>
-            <p class="text-gray-400">파이썬 AI 코어 연동망 및 실시간 고래 자금 추적 시스템</p>
-        </div>
+<body class="p-4 lg:p-6 overflow-hidden">
+    <!-- Header Area -->
+    <header class="flex justify-between items-center mb-6 w-full">
         <div class="flex items-center gap-4">
-            <!-- 사운드 토글 버튼 추가 -->
-            <button onclick="enableAudio()" id="btn-audio" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 mb-2 rounded-lg text-[14px] text-gray-400 border border-gray-600 transition-colors tooltip" title="사운드 알람 권한 승인">
-                <i class="fas fa-volume-mute" id="audio-icon"></i>
-            </button>
-            <div id="live-clock" class="text-2xl font-mono font-black text-[#f59e0b] bg-black/60 px-5 py-2 mb-2 rounded-xl border border-amber-900/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                --:--:--
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <i class="fas fa-satellite-dish text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-white m-0 flex items-center gap-3">
+                    OMNISCIENCE <span class="text-gray-400 font-light text-xl">|</span> 
+                    <span class="text-gradient">BYBIT RADAR</span>
+                    <span class="text-[10px] font-bold tracking-widest border border-indigo-500/30 text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase">v3.0 C.O.T</span>
+                </h1>
+                <p class="text-sm text-slate-400 mt-1 font-medium">파이썬 AI 코어 연동망 및 실시간 고래 자금 추적 시스템</p>
             </div>
         </div>
-    </div>
+        
+        <div class="flex items-center gap-4">
+            <!-- 사운드 토글 버튼 -->
+            <button onclick="enableAudio()" id="btn-audio" class="p-3 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-slate-400 border border-slate-700 transition-all active:scale-95 shadow-lg group">
+                <i class="fas fa-volume-mute group-hover:text-white transition-colors" id="audio-icon"></i>
+            </button>
+            <div id="live-clock" class="text-xl font-bold font-mono tracking-widest text-slate-200 bg-slate-900/80 px-6 py-2.5 rounded-xl border border-slate-700 shadow-lg flex items-center gap-3">
+                <i class="far fa-clock text-indigo-400"></i> <span id="clock-display">--:--:--</span>
+            </div>
+        </div>
+    </header>
     
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
         
         <!-- 상승 Top 10 레이더 -->
-        <div class="lg:col-span-4 glass p-4 rounded-xl flex flex-col h-[calc(100vh-120px)]">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-rocket text-green-500 mr-2"></i> 자금 쏠림 (Top 10)</h2>
-            <div id="top-gainers" class="space-y-2 overflow-y-auto flex-grow custom-scrollbar"></div>
+        <div class="lg:col-span-4 glass-panel flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-white/5 bg-white/[0.02]">
+                <h2 class="text-base font-bold text-white flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400"><i class="fas fa-rocket"></i></div>
+                        자금 쏠림 <span class="text-slate-400 font-normal text-sm ml-1">(Top 10)</span>
+                    </div>
+                </h2>
+            </div>
+            <div id="top-gainers" class="p-3 space-y-2 overflow-y-auto flex-grow custom-scrollbar">
+                <!-- Loading State -->
+                <div class="flex flex-col items-center justify-center h-full text-slate-500">
+                    <i class="fas fa-circle-notch fa-spin text-2xl mb-3"></i>
+                    <p class="text-sm">위성 데이터 동기화 중...</p>
+                </div>
+            </div>
         </div>
 
-        <!-- 하락 Top 10 레이더 -->
-        <div class="lg:col-span-4 glass p-4 rounded-xl flex flex-col h-[calc(100vh-120px)]">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2"><i class="fas fa-meteor text-red-500 mr-2"></i> 기술적 반등 대기 (Drawdown 10)</h2>
-            <div id="top-losers" class="space-y-2 overflow-y-auto flex-grow custom-scrollbar"></div>
+        <!-- 하락 Top 10 레이더 (설거지) -->
+        <div class="lg:col-span-4 glass-panel flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-white/5 bg-white/[0.02]">
+                <h2 class="text-base font-bold text-white flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400"><i class="fas fa-meteor"></i></div>
+                        기술적 반등 대기 <span class="text-slate-400 font-normal text-sm ml-1">(Drawdown 10)</span>
+                    </div>
+                </h2>
+            </div>
+            <div id="top-losers" class="p-3 space-y-2 overflow-y-auto flex-grow custom-scrollbar"></div>
         </div>
         
         <!-- 제갈량 통제소 -->
-        <div class="lg:col-span-4 glass p-4 rounded-xl flex flex-col h-[calc(100vh-120px)] relative">
-            <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-800 pb-2 flex justify-between">
-                <span><i class="fas fa-brain text-purple-400 mr-2"></i> 제갈량 OMNISCIENCE</span>
-                <span class="text-xs text-green-400 flex items-center"><div class="w-2 h-2 bg-green-400 rounded-full animate-ping mr-2"></div> AI 링크 연결됨</span>
-            </h2>
-            
-            <div id="leaders-list" class="space-y-2 mb-4 border-b border-gray-800 pb-4"></div>
-            
-            <!-- AI 브리핑 패널 -->
-            <div class="bg-black/40 border border-purple-500/50 rounded-lg p-4 shadow-[0_0_15px_rgba(168,85,247,0.2)] flex-grow overflow-y-auto custom-scrollbar">
-                <div class="text-[12px] text-purple-400 font-bold mb-3"><i class="fas fa-robot mr-1"></i> Chain_of_Thought 지능 브리핑</div>
-                <div id="ai-verdict" class="text-[14px] text-gray-300 leading-relaxed whitespace-pre-wrap">AI 두뇌 응답 대기 중...</div>
+        <div class="lg:col-span-4 flex flex-col gap-6">
+            <!-- 최고 대장주 패널 -->
+            <div class="glass-panel p-5">
+                <h2 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                    <i class="fas fa-crown text-amber-500"></i> 최고 대장 관제소
+                </h2>
+                <div id="leaders-list" class="space-y-3"></div>
             </div>
-            
-            <div class="mt-4 border-t border-gray-800 pt-3 text-[11px] text-gray-500 font-mono text-center" id="last-update">업데이트 대기</div>
+
+            <!-- 제갈량 AI 브리핑 패널 -->
+            <div class="glass-panel flex-grow flex flex-col overflow-hidden relative">
+                <!-- Glowing border top -->
+                <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+                
+                <div class="p-5 border-b border-white/5 flex justify-between items-center bg-purple-900/10">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <span class="text-gradient">제갈량 OMNISCIENCE</span>
+                    </h2>
+                    <div class="flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-ping mr-1"></div> 연결됨
+                    </div>
+                </div>
+                
+                <div class="p-5 flex-grow overflow-y-auto custom-scrollbar bg-slate-900/30">
+                    <div id="ai-verdict" class="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">
+                        <div class="flex flex-col items-center justify-center py-10 opacity-50">
+                            <i class="fas fa-layer-group text-3xl mb-3 text-purple-400"></i>
+                            <p>AI 사고 코어 스탠바이...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-3 border-t border-white/5 bg-black/20 text-[11px] text-slate-500 font-mono text-center flex justify-between items-center px-5">
+                    <span id="last-update"><i class="fas fa-sync fa-spin mr-1"></i> Data Syncing...</span>
+                    <span class="text-indigo-400/50">1004MAS NEURAL NET</span>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -91,10 +203,12 @@
         function enableAudio() {
             audioEnabled = true;
             const icon = document.getElementById('audio-icon');
+            const btn = document.getElementById('btn-audio');
             if (icon) {
                 icon.classList.remove('fa-volume-mute');
                 icon.classList.add('fa-volume-up');
-                icon.classList.add('text-green-400');
+                icon.classList.add('text-emerald-400');
+                btn.classList.add('border-emerald-500/30', 'bg-emerald-500/10');
             }
             playSound('test');
         }
@@ -106,17 +220,15 @@
                 if(!Ctx) return;
                 const ctx = new Ctx();
                 if(type === 'test') {
-                    // 권한 승인음
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.connect(gain); gain.connect(ctx.destination);
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
                     gain.gain.setValueAtTime(0.1, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
                     osc.start(); osc.stop(ctx.currentTime + 0.1);
                 } else if(type === 'alert') {
-                    // 긴급 사이렌 알람 (황금 타점)
                     [0, 0.2, 0.4].forEach(offset => {
                         const o = ctx.createOscillator();
                         const g = ctx.createGain();
@@ -124,7 +236,7 @@
                         o.type = 'sawtooth';
                         o.frequency.setValueAtTime(800, ctx.currentTime + offset);
                         o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + offset + 0.1);
-                        g.gain.setValueAtTime(0.4, ctx.currentTime + offset);
+                        g.gain.setValueAtTime(0.3, ctx.currentTime + offset);
                         g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + offset + 0.15);
                         o.start(ctx.currentTime + offset); o.stop(ctx.currentTime + offset + 0.15);
                     });
@@ -133,9 +245,10 @@
         }
 
         function updateClock() {
-            document.getElementById('live-clock').innerText = new Date().toLocaleTimeString('en-GB');
+            document.getElementById('clock-display').innerText = new Date().toLocaleTimeString('en-US', {hour12:false});
         }
         setInterval(updateClock, 1000);
+        updateClock();
 
         function renderList(dataArr, elementId, mode) {
             const html = dataArr.map((t, i) => {
@@ -145,20 +258,32 @@
                 const vel = parseFloat(t.velocity1m).toFixed(2);
                 const dd = parseFloat(t.drawdown).toFixed(1);
                 
-                const bgClass = mode === 'gainer' ? 'gainer-bg' : 'loser-bg';
-                const colorClass = mode === 'gainer' ? 'text-green-400' : 'text-red-400';
-                const sign = mode === 'gainer' ? '+' : '';
+                const isGainer = mode === 'gainer';
+                const cardClass = isGainer ? 'gainer-card' : 'loser-card';
+                const textColor = isGainer ? 'text-emerald-400' : 'text-rose-400';
+                const sign = chg > 0 ? '+' : '';
                 
                 return `
-                    <div class="${bgClass} bg-black/40 p-3 rounded-lg border border-gray-800 hover:border-gray-600">
-                        <div class="flex justify-between items-center mb-1">
-                            <div class="font-bold text-white tracking-wide">${i+1}. ${sym}</div>
-                            <div class="text-lg font-black ${colorClass}">${sign}${chg}%</div>
+                    <div class="coin-card ${cardClass} p-3 flex flex-col relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="text-xs font-black text-slate-600 bg-slate-800 rounded px-1.5 py-0.5">${i+1}</div>
+                                <div class="font-bold text-white text-[15px] tracking-wide">${sym}</div>
+                            </div>
+                            <div class="text-lg font-black mono-num tracking-tight ${textColor}">${sign}${chg}%</div>
                         </div>
-                        <div class="flex justify-between text-[11px] font-mono text-gray-400">
-                            <span>FR: <span class="${fr < 0 ? 'text-red-400 font-bold' : ''}">${fr}%</span></span>
-                            <span>Vel: ${vel}%</span>
-                            <span>Peak: ${dd}%</span>
+                        <div class="flex justify-between font-mono">
+                            <div class="metric-badge ${fr < 0 ? 'text-rose-300 border-rose-500/30 bg-rose-500/10' : 'text-slate-400'}">
+                                <span>FR</span> ${fr}%
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="metric-badge text-indigo-300 border-indigo-500/20">
+                                    <i class="fas fa-bolt text-indigo-400"></i> ${vel}%
+                                </div>
+                                <div class="metric-badge ${dd < -10 ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 'text-slate-400'}">
+                                    <i class="fas fa-mountain"></i> ${dd}%
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -178,7 +303,18 @@
                     const lHtml = data.leaders.map(t => {
                         const sym = t.symbol.replace('USDT', '');
                         const chg = (parseFloat(t.price24hPcnt) * 100).toFixed(2);
-                        return `<div class="bg-yellow-900/10 p-2 rounded border border-yellow-800 flex justify-between"><span class="text-yellow-500 font-bold"><i class="fas fa-crown"></i> ${sym}</span> <span class="${chg>=0?'text-green-400':'text-red-400'} font-bold">${chg}%</span></div>`;
+                        const isUp = chg >= 0;
+                        return `
+                            <div class="bg-gradient-to-r from-amber-500/10 to-transparent p-3 rounded-xl border border-amber-500/20 flex justify-between items-center group hover:bg-amber-500/20 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fas fa-gem"></i></div>
+                                    <span class="text-amber-100 font-extrabold text-lg">${sym}</span>
+                                </div>
+                                <span class="mono-num text-xl font-black ${isUp ? 'text-emerald-400' : 'text-rose-400'} drop-shadow-md">
+                                    ${isUp ? '+' : ''}${chg}%
+                                </span>
+                            </div>
+                        `;
                     }).join('');
                     document.getElementById('leaders-list').innerHTML = lHtml;
                 }
@@ -186,21 +322,32 @@
                 if(data.verdicts) {
                     let vHtml = data.verdicts;
                     
-                    // 새로운 타겟이 포착되었을 때 소리 재생 로직
                     if (vHtml !== lastVerdictText && !vHtml.includes("스나이퍼 타겟이 없습니다.")) {
                         playSound('alert');
+                        document.querySelector('.glass-panel:nth-child(2)').classList.add('ai-active');
+                        setTimeout(() => document.querySelector('.glass-panel:nth-child(2)').classList.remove('ai-active'), 4000);
                     }
                     lastVerdictText = vHtml;
 
-                    // Format XML thinking tags for visuals
-                    vHtml = vHtml.replace(/<thinking>/g, '<div class="text-gray-500 text-[12px] italic border-l-2 border-purple-800 pl-2 mb-3 bg-black/30 p-2 rounded">🧠 Thought Process:\n').replace(/<\/thinking>/g, '</div>');
-                    // Format Alert text
-                    vHtml = vHtml.replace(/🚨|❌|⚠️/g, '<span class="text-red-500 text-lg">$&</span>');
+                    // UI 렌더링 포맷팅 (정규식 대체)
+                    vHtml = vHtml.replace(/<thinking>/g, `
+                        <div class="relative bg-slate-800/50 rounded-xl p-4 mb-4 border border-purple-500/30 overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-400 to-indigo-600"></div>
+                            <div class="flex items-center gap-2 mb-2 text-purple-300 text-xs font-bold uppercase tracking-widest">
+                                <i class="fas fa-microchip"></i> AI Thought Process
+                            </div>
+                            <div class="text-[13px] text-slate-400 font-mono leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
+                    `).replace(/<\/thinking>/g, '</div></div>');
+                    
+                    // Highlight emojis & Warnings
+                    vHtml = vHtml.replace(/(🚨|❌|⚠️)/g, '<span class="text-rose-500 text-lg mx-1 drop-shadow-md animate-pulse">$1</span>');
                     
                     document.getElementById('ai-verdict').innerHTML = vHtml;
                 }
                 
-                if(data.last_update) document.getElementById('last-update').innerText = "Last Update: " + data.last_update;
+                if(data.last_update) {
+                    document.getElementById('last-update').innerHTML = `마지막 동기화: ${data.last_update.split(' ')[1]}`;
+                }
                 
             } catch (err) {
                 console.error("Backend fetch error:", err);
