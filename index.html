@@ -193,6 +193,17 @@
                     <span class="text-indigo-400/50">1004MAS NEURAL NET</span>
                 </div>
             </div>
+            
+            <!-- NEW: n8n-Style Execution Terminal -->
+            <div class="glass-panel flex flex-col overflow-hidden">
+                <div class="p-2 border-b border-white/5 bg-black/40 flex justify-between items-center text-emerald-400">
+                    <span class="text-[12px] font-black font-mono"><i class="fas fa-terminal mr-2"></i>Multi-Agent Pipeline</span>
+                    <span class="text-[8px] bg-emerald-900/40 text-emerald-300 px-1 rounded border border-emerald-800 animate-pulse">Running</span>
+                </div>
+                <div class="p-2 overflow-y-auto w-full flex-col gap-1 bg-black/60 text-emerald-400 font-mono text-[10px] min-h-[140px] max-h-[180px] custom-scrollbar opacity-90 leading-tight" id="agent-terminal-container">
+                    <div><span class="text-gray-500">[System]</span> Initializing Pipeline...</div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -347,6 +358,14 @@
                 
                 if(data.last_update) {
                     document.getElementById('last-update').innerHTML = `마지막 동기화: ${data.last_update.split(' ')[1]}`;
+                }
+                
+                if(data.n8n_logs && data.n8n_logs.length > 0) {
+                    const container = document.getElementById('agent-terminal-container');
+                    if (container) {
+                        container.innerHTML = data.n8n_logs.join("");
+                        container.scrollTop = container.scrollHeight;
+                    }
                 }
                 
             } catch (err) {
